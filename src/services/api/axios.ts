@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 // VITE_APP_BASE_URL real API
 const api = axios.create({
-  baseURL: import.meta.env.VITE_APP_BASE_URL,
+  baseURL: "https://loyiha.kuprikqurilish.uz/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
