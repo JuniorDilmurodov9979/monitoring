@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
-import { Badge, Avatar, Spin, Empty, Input, Modal, Form, Select, Button, message } from "antd";
+import {
+  Badge,
+  Avatar,
+  Spin,
+  Empty,
+  Input,
+  Modal,
+  Form,
+  Select,
+  Button,
+  message,
+} from "antd";
 import {
   SearchOutlined,
   MessageOutlined,
@@ -41,18 +52,32 @@ const formatTime = (isoString: string) => {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return date.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("uz-UZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } else if (diffDays === 1) {
     return "Kecha";
   } else if (diffDays < 7) {
     return date.toLocaleDateString("uz-UZ", { weekday: "short" });
   } else {
-    return date.toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" });
+    return date.toLocaleDateString("uz-UZ", {
+      day: "2-digit",
+      month: "2-digit",
+    });
   }
 };
 
 const getAvatarColor = (name: string) => {
-  const colors = ["#1677ff", "#52c41a", "#fa8c16", "#eb2f96", "#722ed1", "#13c2c2", "#f5222d"];
+  const colors = [
+    "#1677ff",
+    "#52c41a",
+    "#fa8c16",
+    "#eb2f96",
+    "#722ed1",
+    "#13c2c2",
+    "#f5222d",
+  ];
   return colors[name.charCodeAt(0) % colors.length];
 };
 
@@ -98,7 +123,9 @@ const XonaCard = ({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
-          <span className={`font-semibold truncate text-sm ${isActive ? "text-blue-700" : "text-gray-800"}`}>
+          <span
+            className={`font-semibold truncate text-sm ${isActive ? "text-blue-700" : "text-gray-800"}`}
+          >
             {xona.nomi}
           </span>
           {xona.oxirgi_xabar && (
@@ -174,7 +201,9 @@ const ChatXonalarPage = () => {
       setData(res.data);
       if (res.data.results.length > 0) setActiveId(res.data.results[0].id);
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? err.message ?? "Xatolik yuz berdi");
+      setError(
+        err?.response?.data?.detail ?? err.message ?? "Xatolik yuz berdi",
+      );
     } finally {
       setLoading(false);
     }
@@ -201,13 +230,19 @@ const ChatXonalarPage = () => {
       // Prepend new xona to list
       setData((prev) =>
         prev
-          ? { ...prev, count: prev.count + 1, results: [res.data, ...prev.results] }
+          ? {
+              ...prev,
+              count: prev.count + 1,
+              results: [res.data, ...prev.results],
+            }
           : prev,
       );
       // Navigate to the new room
       navigate("/chats/" + res.data.id);
     } catch (err: any) {
-      messageApi.error(err?.response?.data?.detail ?? "Xona yaratishda xatolik");
+      messageApi.error(
+        err?.response?.data?.detail ?? "Xona yaratishda xatolik",
+      );
     } finally {
       setCreateLoading(false);
     }
@@ -217,18 +252,24 @@ const ChatXonalarPage = () => {
     x.nomi.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const totalUnread = data?.results.reduce((sum, x) => sum + x.oqilmagan_soni, 0) ?? 0;
+  const totalUnread =
+    data?.results.reduce((sum, x) => sum + x.oqilmagan_soni, 0) ?? 0;
 
   return (
-    <div className="flex flex-col h-full bg-white" style={{ minHeight: 400 }}>
+    <div
+      className="flex flex-col h-full bg-gray-5 px-6 py-8 rounded-xl"
+      style={{ minHeight: 400 }}
+    >
       {contextHolder}
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-white">
+      <div className="pb-5 border-b border-gray-200">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <MessageOutlined className="text-blue-500 text-lg" />
-            <h2 className="font-bold text-gray-800 text-base m-0">Chat xonalar</h2>
+            <h2 className="font-bold text-gray-800 text-base m-0">
+              Chat xonalar
+            </h2>
             {data && (
               <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                 {data.count}
@@ -285,7 +326,9 @@ const ChatXonalarPage = () => {
         {!loading && !error && filtered?.length === 0 && (
           <div className="flex items-center justify-center h-32">
             <Empty
-              description={<span className="text-gray-400 text-sm">Xona topilmadi</span>}
+              description={
+                <span className="text-gray-400 text-sm">Xona topilmadi</span>
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           </div>
@@ -362,7 +405,10 @@ const ChatXonalarPage = () => {
             <Input type="number" placeholder="Obyekt ID" />
           </Form.Item>
 
-          <Form.Item name="ishtirokchi_idlar" label="Ishtirokchilar (ixtiyoriy)">
+          <Form.Item
+            name="ishtirokchi_idlar"
+            label="Ishtirokchilar (ixtiyoriy)"
+          >
             <Select
               mode="tags"
               placeholder="Foydalanuvchi ID larini kiriting"

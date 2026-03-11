@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Spin, Modal, Form, Input, message } from "antd";
-import { PlusOutlined, RiseOutlined, TeamOutlined, TrophyOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  RiseOutlined,
+  TeamOutlined,
+  TrophyOutlined,
+} from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { useNavigate } from "react-router-dom";
 
@@ -13,13 +18,33 @@ interface Boshqarma {
 }
 
 const topConfig = [
-  { bg: "bg-amber-50",   border: "border-amber-200",  text: "text-amber-600",  badge: "bg-amber-100 text-amber-600",  icon: "🥇" },
-  { bg: "bg-slate-50",   border: "border-slate-200",  text: "text-slate-500",  badge: "bg-slate-100 text-slate-500",  icon: "🥈" },
-  { bg: "bg-orange-50",  border: "border-orange-200", text: "text-orange-500", badge: "bg-orange-100 text-orange-500", icon: "🥉" },
+  {
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-600",
+    badge: "bg-amber-100 text-amber-600",
+    icon: "🥇",
+  },
+  {
+    bg: "bg-slate-50",
+    border: "border-slate-200",
+    text: "text-slate-500",
+    badge: "bg-slate-100 text-slate-500",
+    icon: "🥈",
+  },
+  {
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+    text: "text-orange-500",
+    badge: "bg-orange-100 text-orange-500",
+    icon: "🥉",
+  },
 ];
 
 const FormLabel = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{children}</span>
+  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+    {children}
+  </span>
 );
 
 const BoshqarmaPage = () => {
@@ -57,7 +82,9 @@ const BoshqarmaPage = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
@@ -68,7 +95,7 @@ const BoshqarmaPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8">
+    <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       {/* Page header */}
       <div className="mb-8">
         <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
@@ -80,7 +107,7 @@ const BoshqarmaPage = () => {
           </h1>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150 cursor-pointer"
           >
             <PlusOutlined className="text-xs" />
             Yangi boshqarma
@@ -106,11 +133,15 @@ const BoshqarmaPage = () => {
             >
               {/* Top rank stripe */}
               {isTop && (
-                <div className={`h-1 w-full ${
-                  index === 0 ? "bg-amber-400" :
-                  index === 1 ? "bg-slate-400" :
-                  "bg-orange-400"
-                }`} />
+                <div
+                  className={`h-1 w-full ${
+                    index === 0
+                      ? "bg-amber-400"
+                      : index === 1
+                        ? "bg-slate-400"
+                        : "bg-orange-400"
+                  }`}
+                />
               )}
 
               <div className="px-5 pt-4 pb-5">
@@ -126,7 +157,9 @@ const BoshqarmaPage = () => {
                   </div>
 
                   {isTop ? (
-                    <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${top!.badge}`}>
+                    <span
+                      className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${top!.badge}`}
+                    >
                       <span>{top!.icon}</span>
                       TOP {index + 1}
                     </span>
@@ -144,8 +177,12 @@ const BoshqarmaPage = () => {
                       <RiseOutlined className="text-slate-400 text-[10px]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-400 leading-none mb-0.5">Reyting</p>
-                      <p className="text-sm font-bold text-slate-700 tabular-nums leading-none">{item.reyting}%</p>
+                      <p className="text-[10px] text-slate-400 leading-none mb-0.5">
+                        Reyting
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 tabular-nums leading-none">
+                        {item.reyting}%
+                      </p>
                     </div>
                   </div>
 
@@ -156,8 +193,12 @@ const BoshqarmaPage = () => {
                       <TeamOutlined className="text-slate-400 text-[10px]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-400 leading-none mb-0.5">Xodimlar</p>
-                      <p className="text-sm font-bold text-slate-700 tabular-nums leading-none">{item.xodimlar_soni}</p>
+                      <p className="text-[10px] text-slate-400 leading-none mb-0.5">
+                        Xodimlar
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 tabular-nums leading-none">
+                        {item.xodimlar_soni}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -170,9 +211,11 @@ const BoshqarmaPage = () => {
                       style={{
                         width: `${item.reyting}%`,
                         background: isTop
-                          ? index === 0 ? "#f59e0b"
-                          : index === 1 ? "#94a3b8"
-                          : "#f97316"
+                          ? index === 0
+                            ? "#f59e0b"
+                            : index === 1
+                              ? "#94a3b8"
+                              : "#f97316"
                           : "#3b82f6",
                       }}
                     />
@@ -197,7 +240,9 @@ const BoshqarmaPage = () => {
             <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
               <TrophyOutlined className="text-slate-500 text-sm" />
             </div>
-            <span className="text-base font-semibold text-slate-800">Yangi boshqarma qo'shish</span>
+            <span className="text-base font-semibold text-slate-800">
+              Yangi boshqarma qo'shish
+            </span>
           </div>
         }
         open={isModalOpen}
@@ -205,7 +250,12 @@ const BoshqarmaPage = () => {
         footer={null}
         width={440}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate} className="pt-2">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreate}
+          className="pt-2"
+        >
           <Form.Item
             label={<FormLabel>Nomi</FormLabel>}
             name="nomi"

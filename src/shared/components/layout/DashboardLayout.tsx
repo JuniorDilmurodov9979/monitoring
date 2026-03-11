@@ -1,8 +1,7 @@
 // src/shared/components/layout/DashboardLayout.jsx
 import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar.js";
-import Header from "./Header.js";
-import Footer from "./Footer.js";
+import Sidebar from "./Sidebar";
+import Header from "./Header";
 
 const DashboardLayout = () => {
   return (
@@ -21,7 +20,6 @@ const DashboardLayout = () => {
         </main>
 
         {/* Footer - Bottom */}
-        <Footer />
       </div>
     </div>
   );

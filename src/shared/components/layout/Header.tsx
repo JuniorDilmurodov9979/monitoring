@@ -57,7 +57,7 @@ const Header = () => {
                 await logout();
                 navigate("/auth/login");
               }}
-              className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
             >
               <svg
                 className="w-5 h-5 group-hover:rotate-12 transition-transform"

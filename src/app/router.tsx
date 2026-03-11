@@ -18,13 +18,17 @@ import ObyektSinglePage from "@/pages/obyektlar/ObyektSinglePage";
 import BayonnomalarPage from "@/pages/bayonnomalar/BayonnomalarPage";
 import TopshiriqlarPage from "@/pages/topshiriqlar/TopshiriqlarPage";
 import BayonnomaSinglePage from "@/pages/bayonnomalar/BayonnomaSinglePage";
-import XodimlarPage from "@/pages/xodimlar/xodimlarPage";
+import XodimlarPage from "@/pages/xodimlar/XodimlarPage";
 import XodimlarSinglePage from "@/pages/xodimlar/XodimlarSinglePage";
 import BoshqarmaSinglePage from "@/pages/boshqarma/BoshqarmaSinglePage";
 import Test from "@/pages/test/Test";
 import ChatXonalarPage from "@/pages/chatXonalar/ChatXonalarPage";
 import ChatXonalarSinglePage from "@/pages/chatXonalar/ChatXonalarSinglePage";
 import TopshiriqDetailPage from "@/pages/topshiriqlar/TopshiriqDetailPage";
+import JarimalarPage from "@/pages/jarimalar/JarimalarPage";
+import JarimalarSinglePage from "@/pages/jarimalar/JarimalarSinglePage";
+import Talablar from "@/pages/talablar/TalablarPage";
+import TalablarSinglePage from "@/pages/talablar/TalablarSinglePage";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
@@ -157,16 +161,9 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+
       {
-        path: "test2",
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <Test />
-          </Suspense>
-        ),
-      },
-      {
-        path: "obyektlar",
+        path: "obyekt",
         element: (
           <Suspense fallback={<PageLoader />}>
             <ObyektPage />
@@ -211,6 +208,38 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ChatXonalarSinglePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/jarimalar",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <JarimalarPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/jarimalar/:id",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <JarimalarSinglePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/talablar",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <Talablar />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/talablar/:id",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <TalablarSinglePage />
           </Suspense>
         ),
       },

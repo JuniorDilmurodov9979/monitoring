@@ -84,7 +84,9 @@ export default function LoginPage() {
                   />
                 </svg>
               </div>
-              <span className="font-medium">{error}</span>
+              <span className="font-medium">
+                Foydalanuvchi nomi yoki Parol noto'g'ri
+              </span>
             </div>
           </div>
         )}

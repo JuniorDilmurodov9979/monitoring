@@ -41,8 +41,6 @@ const XodimlarPage = () => {
   const paginated = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
 
-  console.log(paginated);
-
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       {/* Page header */}
@@ -63,7 +61,7 @@ const XodimlarPage = () => {
             )}
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150 cursor-pointer"
             >
               <UserAddOutlined className="text-xs" />
               Xodim qo'shish

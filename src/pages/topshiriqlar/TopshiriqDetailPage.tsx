@@ -250,7 +250,7 @@ const TopshiriqDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* ── Hero Header ── */}
-      <div className={`bg-gradient-to-r ${cfg.bg} shadow-lg`}>
+      <div className={`bg-gradient-to-r ${cfg.bg} shadow-lg rounded-t-xl`}>
         <div className="max-w-5xl mx-auto px-6 pt-5 pb-8">
           <Button
             icon={<ArrowLeftOutlined />}
@@ -357,7 +357,7 @@ const TopshiriqDetailPage = () => {
             {/* Natija & Izoh */}
             {(data.natija || data.izoh) && (
               <Card
-                className="rounded-2xl border border-slate-200 shadow-sm"
+                className="rounded-2xl mt-5! border border-slate-200 shadow-sm"
                 title={
                   <span className="text-slate-700 font-semibold flex items-center gap-2">
                     <CommentOutlined className="text-indigo-500" /> Natija va
@@ -389,7 +389,7 @@ const TopshiriqDetailPage = () => {
             )}
 
             {/* ── Chat-style comments ── */}
-            <div className="rounded-2xl border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
+            <div className="rounded-2xl mt-5 border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
               {/* Header */}
               <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2 bg-white">
                 <CommentOutlined className="text-indigo-500" />

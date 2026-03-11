@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Spin,
   Modal,
@@ -8,18 +8,22 @@ import {
   InputNumber,
   Select,
   message,
+  Upload,
 } from "antd";
 import {
   PlusOutlined,
   BuildOutlined,
   EnvironmentOutlined,
   WarningOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  SortAscendingOutlined,
 } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
 import { useNavigate } from "react-router-dom";
+import ManzilField from "./ManzilField";
 
 interface Obyekt {
   id: number;
@@ -58,15 +62,30 @@ interface User {
   last_name: string;
 }
 
+interface FilterParams {
+  search: string;
+  holat: string;
+  manzil: string;
+  ordering: string;
+}
+
 const holatConfig: Record<string, { bg: string; text: string; dot: string }> = {
   rejada: { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
-  jarayonda: { bg: "bg-indigo-50", text: "text-indigo-600", dot: "bg-indigo-400" },
+  jarayonda: {
+    bg: "bg-indigo-50",
+    text: "text-indigo-600",
+    dot: "bg-indigo-400",
+  },
   tugatilgan: {
     bg: "bg-green-50",
     text: "text-green-600",
     dot: "bg-green-500",
   },
-  toxtatilgan: { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-500" },
+  toxtatilgan: {
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    dot: "bg-amber-500",
+  },
   muammoli: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-500" },
 };
 
@@ -102,6 +121,27 @@ const FormLabel = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
+const ORDERING_OPTIONS = [
+  { value: "", label: "Standart" },
+  { value: "nomi", label: "Nomi (A→Z)" },
+  { value: "-nomi", label: "Nomi (Z→A)" },
+  { value: "tugash_sanasi", label: "Tugash sanasi (eski)" },
+  { value: "-tugash_sanasi", label: "Tugash sanasi (yangi)" },
+  { value: "bajarilish_foizi", label: "Bajarilish foizi (o'sish)" },
+  { value: "-bajarilish_foizi", label: "Bajarilish foizi (kamayish)" },
+  { value: "reja_foizi", label: "Reja foizi (o'sish)" },
+  { value: "-reja_foizi", label: "Reja foizi (kamayish)" },
+];
+
+const HOLAT_OPTIONS = [
+  { value: "", label: "Barchasi" },
+  { value: "rejada", label: "Rejada" },
+  { value: "jarayonda", label: "Jarayonda" },
+  { value: "tugatilgan", label: "Tugatilgan" },
+  { value: "toxtatilgan", label: "To'xtatilgan" },
+  { value: "muammoli", label: "Muammoli" },
+];
+
 const ObyektPage = () => {
   const [data, setData] = useState<Obyekt[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -112,18 +152,42 @@ const ObyektPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const getObyektlar = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(API_ENDPOINTS.OBYEKTLAR.LIST);
-      setData(response.data.results);
-    } catch (error) {
-      console.error("Error fetching obyektlar:", error);
-      message.error("Obyektlarni yuklashda xatolik yuz berdi");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [filters, setFilters] = useState<FilterParams>({
+    search: "",
+    holat: "",
+    manzil: "",
+    ordering: "",
+  });
+  const [searchInput, setSearchInput] = useState("");
+  const [manzilInput, setManzilInput] = useState("");
+
+  const buildQueryParams = useCallback((f: FilterParams) => {
+    const params: Record<string, string> = {};
+    if (f.search) params.search = f.search;
+    if (f.holat) params.holat = f.holat;
+    if (f.manzil) params.manzil = f.manzil;
+    if (f.ordering) params.ordering = f.ordering;
+    return params;
+  }, []);
+
+  const getObyektlar = useCallback(
+    async (f: FilterParams = filters) => {
+      try {
+        setLoading(true);
+        const params = buildQueryParams(f);
+        const response = await api.get(API_ENDPOINTS.OBYEKTLAR.LIST, {
+          params,
+        });
+        setData(response.data.results);
+      } catch (error) {
+        console.error("Error fetching obyektlar:", error);
+        message.error("Obyektlarni yuklashda xatolik yuz berdi");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filters, buildQueryParams],
+  );
 
   const getUsers = async () => {
     try {
@@ -138,11 +202,28 @@ const ObyektPage = () => {
   };
 
   useEffect(() => {
-    getObyektlar();
-  }, []);
+    getObyektlar(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
   useEffect(() => {
     if (isModalOpen) getUsers();
   }, [isModalOpen]);
+
+  // Debounced search & manzil
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchInput }));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, manzil: manzilInput }));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [manzilInput]);
 
   const handleCreateObyekt = async (values: any) => {
     try {
@@ -158,7 +239,7 @@ const ObyektPage = () => {
       message.success("Obyekt muvaffaqiyatli qo'shildi");
       setIsModalOpen(false);
       form.resetFields();
-      getObyektlar();
+      getObyektlar(filters);
     } catch (error) {
       console.error("Error creating obyekt:", error);
       message.error("Obyekt qo'shishda xatolik yuz berdi");
@@ -167,8 +248,21 @@ const ObyektPage = () => {
     }
   };
 
+  const activeFilterCount = [
+    filters.search,
+    filters.holat,
+    filters.manzil,
+    filters.ordering,
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setManzilInput("");
+    setFilters({ search: "", holat: "", manzil: "", ordering: "" });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8">
+    <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       {/* Page header */}
       <div className="mb-6">
         <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
@@ -180,12 +274,66 @@ const ObyektPage = () => {
           </h1>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-colors duration-150 cursor-pointer"
           >
             <PlusOutlined className="text-xs" />
             Yangi Obyekt
           </button>
         </div>
+      </div>
+
+      {/* Filter bar */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+        {/* Search */}
+        <div className="flex items-center gap-2 flex-1 min-w-[180px] max-w-xs border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 focus-within:border-slate-400 transition-colors">
+          <SearchOutlined className="text-slate-400 text-sm flex-shrink-0" />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Nomi yoki Manzili bo'yicha qidirish..."
+            className="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-full"
+          />
+        </div>
+
+        {/* Holat filter */}
+        <div className="flex items-center gap-1.5">
+          <FilterOutlined className="text-slate-400 text-xs" />
+          <Select
+            value={filters.holat}
+            onChange={(val) => setFilters((prev) => ({ ...prev, holat: val }))}
+            options={HOLAT_OPTIONS}
+            size="middle"
+            style={{ width: 148 }}
+            className="text-sm"
+            placeholder="Holat"
+          />
+        </div>
+
+        {/* Ordering */}
+        <div className="flex items-center gap-1.5">
+          <SortAscendingOutlined className="text-slate-400 text-xs" />
+          <Select
+            value={filters.ordering}
+            onChange={(val) =>
+              setFilters((prev) => ({ ...prev, ordering: val }))
+            }
+            options={ORDERING_OPTIONS}
+            size="middle"
+            style={{ width: 200 }}
+            className="text-sm"
+            placeholder="Tartiblash"
+          />
+        </div>
+
+        {/* Clear filters */}
+        {activeFilterCount > 0 && (
+          <button
+            onClick={clearFilters}
+            className="ml-auto text-xs text-slate-500 hover:text-slate-700 underline underline-offset-2 transition-colors cursor-pointer"
+          >
+            Tozalash ({activeFilterCount})
+          </button>
+        )}
       </div>
 
       {/* Table card */}
@@ -196,7 +344,6 @@ const ObyektPage = () => {
           </div>
         ) : (
           <>
-            {/* Custom table */}
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
@@ -219,15 +366,11 @@ const ObyektPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.map((row, i) => (
+                {data.map((row) => (
                   <tr
                     key={row.id}
                     onClick={() => navigate(`/obyekt/${row.id}`)}
-                    className={`
-                      cursor-pointer border-b border-slate-100 last:border-b-0
-                      hover:bg-slate-50 transition-colors duration-100
-                      ${i % 2 === 0 ? "" : ""}
-                    `}
+                    className="cursor-pointer border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors duration-100"
                   >
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2.5">
@@ -241,7 +384,7 @@ const ObyektPage = () => {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1 text-slate-500 text-sm">
-                        <EnvironmentOutlined className="text-slate-300 text-xs" />
+                        <EnvironmentOutlined className="text-slate-300 text-xs ml-1" />
                         {row.manzil}
                       </div>
                     </td>
@@ -281,7 +424,9 @@ const ObyektPage = () => {
 
             {data.length === 0 && (
               <div className="text-center py-16 text-slate-400 text-sm">
-                Hozircha obyektlar mavjud emas
+                {activeFilterCount > 0
+                  ? "Filtr bo'yicha obyektlar topilmadi"
+                  : "Hozircha obyektlar mavjud emas"}
               </div>
             )}
           </>
@@ -335,14 +480,7 @@ const ObyektPage = () => {
               <Input className="rounded-lg" placeholder="Obyekt nomi" />
             </Form.Item>
 
-            <Form.Item
-              className="col-span-2"
-              label={<FormLabel>Manzil</FormLabel>}
-              name="manzil"
-              rules={[{ required: true, message: "Manzilni kiriting" }]}
-            >
-              <Input className="rounded-lg" placeholder="Manzil" />
-            </Form.Item>
+            <ManzilField />
 
             <Form.Item
               label={<FormLabel>Buyurtmachi</FormLabel>}
@@ -437,6 +575,7 @@ const ObyektPage = () => {
             >
               <InputNumber
                 className="w-full rounded-lg"
+                style={{ width: "100%" }}
                 placeholder="0"
                 addonAfter="so'm"
                 formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
@@ -450,6 +589,7 @@ const ObyektPage = () => {
             >
               <InputNumber
                 className="w-full rounded-lg"
+                style={{ width: "100%" }}
                 placeholder="0"
                 addonAfter="so'm"
                 formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
@@ -470,10 +610,23 @@ const ObyektPage = () => {
 
             <Form.Item
               className="col-span-2"
-              label={<FormLabel>Rasm URL</FormLabel>}
+              label={<FormLabel>Rasm yuklash</FormLabel>}
               name="rasm"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
             >
-              <Input className="rounded-lg" placeholder="https://..." />
+              <Upload
+                listType="picture"
+                beforeUpload={() => false}
+                maxCount={1}
+              >
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 hover:bg-slate-600 hover:text-white transition-colors cursor-pointer"
+                >
+                  Rasm tanlash
+                </button>
+              </Upload>
             </Form.Item>
           </div>
         </Form>

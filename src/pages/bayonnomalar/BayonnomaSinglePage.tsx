@@ -28,6 +28,8 @@ import {
   CheckSquareOutlined,
   ExclamationCircleOutlined,
   LinkOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { formatDate } from "@/shared/components/const/CustomUI";
 import {
@@ -37,6 +39,8 @@ import {
   InfoRow,
   TopshiriqCard,
 } from "./Const";
+import BayonnomaEditModal from "./BayonnomaEditModal";
+import TopshiriqQoshishModal from "./TopshiriqQushishModal";
 
 const { Title, Text } = Typography;
 
@@ -101,6 +105,8 @@ const BayonnomaSinglePage = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<BayonnomaSingle | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -136,7 +142,7 @@ const BayonnomaSinglePage = () => {
   const progressColor = getProgressColor(data.bajarilish_foizi);
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-8">
+    <div className="min-h-screen bg-slate-50 px-6 py-8 rounded-xl">
       {/* ── Back button + breadcrumb ── */}
       <div className="mb-6 flex items-center gap-3">
         <button
@@ -155,6 +161,14 @@ const BayonnomaSinglePage = () => {
             {data.raqami}
           </Tag>
         </div>
+
+        <button
+          className="ml-auto flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer"
+          onClick={() => setEditOpen(true)}
+        >
+          <EditOutlined className="text-indigo-500  cursor-pointer hover:text-indigo-700" />{" "}
+          Tahrirlash
+        </button>
       </div>
 
       {/* ── Hero header ── */}
@@ -191,7 +205,11 @@ const BayonnomaSinglePage = () => {
               </Title>
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
-                  {getInitials(data.yaratuvchi_fio)}
+                  {data.yaratuvchi_fio ? (
+                    getInitials(data.yaratuvchi_fio)
+                  ) : (
+                    <UserOutlined />
+                  )}
                 </div>
                 <Text className="text-sm! text-slate-500!">
                   Yaratuvchi:{" "}
@@ -400,6 +418,14 @@ const BayonnomaSinglePage = () => {
                 {data.topshiriqlar.length}
               </Tag>
             </div>
+
+            {/* ← NEW button */}
+            <button
+              onClick={() => setAddOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-100 hover:border-emerald-300 transition-all cursor-pointer"
+            >
+              <PlusOutlined /> Topshiriq qo'shish
+            </button>
           </div>
 
           {data.topshiriqlar.length === 0 ? (
@@ -416,6 +442,29 @@ const BayonnomaSinglePage = () => {
           )}
         </div>
       </div>
+
+      <TopshiriqQoshishModal
+        open={addOpen}
+        bayonnomaId={data.id}
+        bayonnomaRaqami={data.raqami}
+        onClose={() => setAddOpen(false)}
+        onSuccess={() => {
+          setAddOpen(false);
+          // Re-fetch to get updated topshiriqlar list
+          api
+            .get<BayonnomaSingle>(`${API_ENDPOINTS.BAYONNOMALAR.LIST}${id}/`)
+            .then((res) => setData(res.data));
+        }}
+      />
+
+      <BayonnomaEditModal
+        open={editOpen}
+        bayonnoma={data}
+        onClose={() => setEditOpen(false)}
+        onSuccess={(updated) =>
+          setData((prev) => (prev ? { ...prev, ...updated } : prev))
+        }
+      />
     </div>
   );
 };

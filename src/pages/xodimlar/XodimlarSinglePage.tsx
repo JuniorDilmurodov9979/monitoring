@@ -206,21 +206,21 @@ const XodimlarSinglePage = () => {
     <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       <div className="max-w-3xl mx-auto">
         {/* Back + breadcrumb */}
-        <div className="mb-6">
+        <div className="mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3 cursor-pointer"
           >
             <ArrowLeftOutlined className="text-[10px]" />
             Xodimlar
           </button>
 
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
+              {/* <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
                 Xodim #{user.id}
-              </p>
-              <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+              </p> */}
+              <h1 className="text-2xl font-semibold text-slate-800 tracking-tight pl-1">
                 {user.fio}
               </h1>
             </div>
@@ -228,7 +228,7 @@ const XodimlarSinglePage = () => {
             <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={openEditModal}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 cursor-pointer"
               >
                 <EditOutlined className="text-[11px]" />
                 Tahrirlash
@@ -244,7 +244,7 @@ const XodimlarSinglePage = () => {
               >
                 <button
                   disabled={deleteLoading}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50 cursor-pointer"
                 >
                   <DeleteOutlined className="text-[11px]" />
                   O'chirish
@@ -261,7 +261,11 @@ const XodimlarSinglePage = () => {
             <div className="relative flex-shrink-0">
               {user.avatar ? (
                 <img
-                  src={user.avatar?.startsWith("http://") ? user.avatar.replace("http://", "https://") : user.avatar}
+                  src={
+                    user.avatar?.startsWith("http://")
+                      ? user.avatar.replace("http://", "https://")
+                      : user.avatar
+                  }
                   alt={user.fio}
                   className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
                 />

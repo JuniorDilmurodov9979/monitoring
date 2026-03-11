@@ -291,7 +291,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-center">
               <div className="flex-shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
                 <svg
                   className="w-3.5 h-3.5 text-violet-500"

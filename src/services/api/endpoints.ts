@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login/",
     REGISTER: "/auth/register",
     LOGOUT: "/auth/logout/",
-    REFRESH: "/auth/refresh",
+    REFRESH: "/auth/token/refresh",
   },
 
   // Users
@@ -38,4 +38,11 @@ export const API_ENDPOINTS = {
   TOPSHIRIQLAR: {
     LIST: "/bayonnomalar/topshiriqlar/",
   },
+  JARIMALAR: {
+    LIST: "/jarimalar/",
+    STATISTIKA: "/jarimalar/boshqarma_statistika/",
+  },
+  CHAT_XONALAR: {
+    LIST: "/chat_xonalar/",
+  }
 };

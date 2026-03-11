@@ -12,6 +12,12 @@ import {
   ClockCircleOutlined,
   FileTextOutlined,
   UserOutlined,
+  FilePdfOutlined,
+  FileOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  SyncOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 
 interface Obyekt {
@@ -38,18 +44,86 @@ interface Obyekt {
   updated_at: string;
 }
 
+interface Hujjat {
+  id: number;
+  nomi: string;
+  obyekt_nomi: string;
+  kategoriya_nomi: string;
+  boshqarma_nomi: string;
+  holat: string;
+  holat_display: string;
+  muddat: string;
+  fayl_turi: string;
+  is_kechikkan: boolean;
+  yuklangan_vaqt: string;
+}
+
 const holatConfig: Record<string, { bg: string; text: string; dot: string }> = {
-  rejada:         { bg: "bg-slate-100",  text: "text-slate-500",   dot: "bg-slate-400"   },
-  jarayonda:      { bg: "bg-blue-50",    text: "text-blue-600",    dot: "bg-blue-400"    },
-  tugatilgan:     { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  "to'xtatilgan": { bg: "bg-rose-50",    text: "text-rose-500",    dot: "bg-rose-400"    },
+  rejada: { bg: "bg-slate-100", text: "text-slate-500", dot: "bg-slate-400" },
+  jarayonda: { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
+  tugatilgan: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
+    dot: "bg-emerald-400",
+  },
+  "to'xtatilgan": {
+    bg: "bg-rose-50",
+    text: "text-rose-500",
+    dot: "bg-rose-400",
+  },
+};
+
+const hujjatHolatConfig: Record<
+  string,
+  { bg: string; text: string; icon: React.ReactNode }
+> = {
+  tasdiqlandi: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
+    icon: <CheckCircleOutlined className="text-[11px]" />,
+  },
+  rad_etildi: {
+    bg: "bg-rose-50",
+    text: "text-rose-500",
+    icon: <CloseCircleOutlined className="text-[11px]" />,
+  },
+  kutilmoqda: {
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    icon: <ExclamationCircleOutlined className="text-[11px]" />,
+  },
+  jarayonda: {
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    icon: <SyncOutlined className="text-[11px]" />,
+  },
 };
 
 const HolatBadge = ({ holat, label }: { holat: string; label: string }) => {
   const cfg = holatConfig[holat] ?? holatConfig.rejada;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {label}
+    </span>
+  );
+};
+
+const HujjatHolatBadge = ({
+  holat,
+  label,
+}: {
+  holat: string;
+  label: string;
+}) => {
+  const cfg = hujjatHolatConfig[holat] ?? hujjatHolatConfig.kutilmoqda;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.bg} ${cfg.text}`}
+    >
+      {cfg.icon}
       {label}
     </span>
   );
@@ -66,9 +140,17 @@ const SectionDivider = ({ title }: { title?: string }) => (
   </div>
 );
 
-const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const DetailRow = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
   <div>
-    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">{label}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
+      {label}
+    </p>
     <div className="text-sm font-medium text-slate-700">{children}</div>
   </div>
 );
@@ -84,8 +166,12 @@ const ProgressBar = ({
 }) => (
   <div>
     <div className="flex items-center justify-between mb-2">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{label}</span>
-      <span className="text-sm font-bold tabular-nums" style={{ color }}>{value}%</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </span>
+      <span className="text-sm font-bold tabular-nums" style={{ color }}>
+        {value}%
+      </span>
     </div>
     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
       <div
@@ -96,11 +182,67 @@ const ProgressBar = ({
   </div>
 );
 
+const HujjatRow = ({ hujjat }: { hujjat: Hujjat }) => {
+  const navigate = useNavigate();
+  const isPdf = hujjat.fayl_turi?.toUpperCase() === "PDF";
+  return (
+    <div className="flex items-start justify-between gap-4 py-3.5 border-b border-slate-100 last:border-0">
+      <div className="flex items-start gap-3 min-w-0">
+        <div className="mt-0.5 w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+          {isPdf ? (
+            <FilePdfOutlined className="text-rose-400 text-sm" />
+          ) : (
+            <FileOutlined className="text-slate-400 text-sm" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <button
+            onClick={() => navigate(`/hujjatlar/${hujjat.id}`)}
+            className="text-sm font-medium text-slate-700 leading-snug truncate cursor-pointer hover:text-slate-900 hover:underline transition duration-300"
+          >
+            {hujjat.nomi}
+          </button>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="text-[11px] text-slate-400">
+              {hujjat.kategoriya_nomi}
+            </span>
+            {hujjat.boshqarma_nomi && (
+              <>
+                <span className="text-slate-200">·</span>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                  {hujjat.boshqarma_nomi}
+                </span>
+              </>
+            )}
+            {hujjat.is_kechikkan && (
+              <>
+                <span className="text-slate-200">·</span>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
+                  <WarningOutlined className="text-[10px]" />
+                  Kechikkan
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+        <HujjatHolatBadge holat={hujjat.holat} label={hujjat.holat_display} />
+        <span className="text-[11px] text-slate-400 tabular-nums">
+          {dayjs(hujjat.muddat).format("DD MMM YYYY")}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const ObyektSinglePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [data, setData] = useState<Obyekt | null>(null);
+  const [hujjatlar, setHujjatlar] = useState<Hujjat[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hujjatlarLoading, setHujjatlarLoading] = useState(false);
 
   const getSingleObyekt = async () => {
     try {
@@ -114,7 +256,24 @@ const ObyektSinglePage = () => {
     }
   };
 
-  useEffect(() => { getSingleObyekt(); }, [id]);
+  const getHujjatlar = async () => {
+    try {
+      setHujjatlarLoading(true);
+      const response = await api.get(
+        `hujjatlar/obyekt_hujjatlari/?obyekt=${id}`,
+      );
+      setHujjatlar(response.data);
+    } catch (error) {
+      console.error("Error fetching hujjatlar:", error);
+    } finally {
+      setHujjatlarLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getSingleObyekt();
+    getHujjatlar();
+  }, [id]);
 
   if (loading || !data) {
     return (
@@ -127,8 +286,10 @@ const ObyektSinglePage = () => {
   const formatMoney = (value: string) => Number(value).toLocaleString("uz-UZ");
 
   const spendPercent = Math.min(
-    Math.round((Number(data.sarflangan_summa) / Number(data.shartnoma_summasi)) * 100),
-    100
+    Math.round(
+      (Number(data.sarflangan_summa) / Number(data.shartnoma_summasi)) * 100,
+    ),
+    100,
   );
 
   return (
@@ -137,7 +298,7 @@ const ObyektSinglePage = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3 cursor-pointer"
         >
           <ArrowLeftOutlined className="text-[10px]" />
           Obyektlar
@@ -148,7 +309,9 @@ const ObyektSinglePage = () => {
             <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
               Obyekt #{data.id}
             </p>
-            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">{data.nomi}</h1>
+            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
+              {data.nomi}
+            </h1>
             <div className="flex items-center gap-1.5 mt-1.5 text-slate-400 text-sm">
               <EnvironmentOutlined className="text-xs" />
               {data.manzil}
@@ -169,7 +332,6 @@ const ObyektSinglePage = () => {
 
       {/* Main card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-0">
-
         {/* Image */}
         {data.rasm && (
           <>
@@ -187,7 +349,11 @@ const ObyektSinglePage = () => {
         {/* Progress bars */}
         <SectionDivider title="Bajarilish holati" />
         <div className="grid md:grid-cols-2 gap-6">
-          <ProgressBar label="Bajarilish" value={data.bajarilish_foizi} color="#3b82f6" />
+          <ProgressBar
+            label="Bajarilish"
+            value={data.bajarilish_foizi}
+            color="#3b82f6"
+          />
           <ProgressBar label="Reja" value={data.reja_foizi} color="#a855f7" />
         </div>
 
@@ -229,7 +395,9 @@ const ObyektSinglePage = () => {
             </p>
             <p className="text-xl font-bold text-slate-800 tabular-nums">
               {formatMoney(data.shartnoma_summasi)}
-              <span className="text-sm font-medium text-slate-400 ml-1">so'm</span>
+              <span className="text-sm font-medium text-slate-400 ml-1">
+                so'm
+              </span>
             </p>
           </div>
 
@@ -239,7 +407,9 @@ const ObyektSinglePage = () => {
             </p>
             <p className="text-xl font-bold text-slate-800 tabular-nums">
               {formatMoney(data.sarflangan_summa)}
-              <span className="text-sm font-medium text-slate-400 ml-1">so'm</span>
+              <span className="text-sm font-medium text-slate-400 ml-1">
+                so'm
+              </span>
             </p>
             <div className="mt-2">
               <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -248,7 +418,9 @@ const ObyektSinglePage = () => {
                   style={{ width: `${spendPercent}%` }}
                 />
               </div>
-              <p className="text-xs text-slate-400 mt-1 tabular-nums">{spendPercent}% sarflandi (Jami summadan)</p>
+              <p className="text-xs text-slate-400 mt-1 tabular-nums">
+                {spendPercent}% sarflandi (Jami summadan)
+              </p>
             </div>
           </div>
         </div>
@@ -257,8 +429,29 @@ const ObyektSinglePage = () => {
         {data.tavsif && (
           <>
             <SectionDivider title="Tavsif" />
-            <p className="text-sm text-slate-600 leading-relaxed">{data.tavsif}</p>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {data.tavsif}
+            </p>
           </>
+        )}
+
+        {/* Hujjatlar */}
+        <SectionDivider title="Hujjatlar" />
+        {hujjatlarLoading ? (
+          <div className="flex justify-center py-8">
+            <Spin size="small" />
+          </div>
+        ) : hujjatlar.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+            <FileTextOutlined className="text-3xl mb-2" />
+            <p className="text-sm">Hujjatlar topilmadi</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {hujjatlar.map((hujjat) => (
+              <HujjatRow key={hujjat.id} hujjat={hujjat} />
+            ))}
+          </div>
         )}
 
         {/* Footer */}

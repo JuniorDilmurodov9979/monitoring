@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { Tooltip } from "antd";
 import { IzohlarSection } from "./AddIzohForm";
+import { Link } from "react-router-dom";
 
 interface Izoh {
   id: number;
@@ -90,14 +91,17 @@ export function getHolatConfig(holat: string): {
   }
 }
 
-export function getInitials(name: string): string {
+export const getInitials = (name?: string) => {
+  if (!name) return "?";
+
   return name
+    .trim()
     .split(" ")
+    .filter(Boolean)
     .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
+    .map((n) => n[0]?.toUpperCase())
+    .join("");
+};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -142,14 +146,14 @@ export const IzohCard = ({ izoh }: { izoh: Izoh }) => (
           {izoh.matn}
         </p>
         {izoh.fayl && (
-          <a
-            href={izoh.fayl}
+          <Link
+            to={`${izoh.fayl}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
           >
             <PaperClipOutlined /> Fayl
-          </a>
+          </Link>
         )}
       </div>
     </div>

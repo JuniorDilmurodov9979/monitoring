@@ -18,12 +18,12 @@ import {
   FileTextOutlined,
   DownloadOutlined,
   ClockCircleOutlined,
+  FolderOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import dayjs from "dayjs";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
-import { BackButton } from "@/shared/components/const/CustomUI";
 
 interface Hujjat {
   id: number;
@@ -56,8 +56,16 @@ interface Obyekt {
 }
 
 const holatConfig: Record<string, { bg: string; text: string; dot: string }> = {
-  kutilmoqda: { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
-  tasdiqlandi: { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
+  kutilmoqda: {
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    dot: "bg-amber-400",
+  },
+  tasdiqlandi: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
+    dot: "bg-emerald-400",
+  },
   rad_etildi: { bg: "bg-rose-50", text: "text-rose-500", dot: "bg-rose-400" },
   arxiv: { bg: "bg-slate-100", text: "text-slate-500", dot: "bg-slate-400" },
 };
@@ -65,23 +73,37 @@ const holatConfig: Record<string, { bg: string; text: string; dot: string }> = {
 const HolatBadge = ({ holat, label }: { holat: string; label: string }) => {
   const cfg = holatConfig[holat] ?? holatConfig.arxiv;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}
+    >
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
       {label}
     </span>
   );
 };
 
-const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const DetailRow = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
   <div>
-    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">{label}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">
+      {label}
+    </p>
     <div className="text-sm font-medium text-slate-700">{children}</div>
   </div>
 );
 
 const SectionDivider = ({ title }: { title?: string }) => (
   <div className="flex items-center gap-3 my-6">
-    {title && <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400 whitespace-nowrap">{title}</span>}
+    {title && (
+      <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400 whitespace-nowrap">
+        {title}
+      </span>
+    )}
     <div className="flex-1 h-px bg-slate-100" />
   </div>
 );
@@ -96,7 +118,10 @@ const HujjatSinglePage = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [obyektlar, setObyektlar] = useState<Obyekt[]>([]);
+  const [kategoriyalar, setKategoriyalar] = useState([]);
   const [obyektlarLoading, setObyektlarLoading] = useState(false);
+  const [boshqarmalar, setBoshqarmalar] = useState([]);
+
   const [form] = Form.useForm();
 
   const fetchSingle = async () => {
@@ -123,6 +148,26 @@ const HujjatSinglePage = () => {
     }
   };
 
+  const getKategoriyalar = async () => {
+    try {
+      const response = await api.get(
+        `/hujjatlar/kategoriyalar/${data?.kategoriya}`,
+      );
+      setKategoriyalar(response.data?.results ?? response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getBoshqarmalar = async () => {
+    try {
+      const response = await api.get(API_ENDPOINTS.BOSHQARMA.LIST);
+      setBoshqarmalar(response.data?.results ?? response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     if (id) fetchSingle();
   }, [id]);
@@ -141,6 +186,8 @@ const HujjatSinglePage = () => {
     });
     setFileList([]);
     fetchObyektlar();
+    getKategoriyalar();
+    getBoshqarmalar();
     setEditOpen(true);
   };
 
@@ -160,7 +207,7 @@ const HujjatSinglePage = () => {
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("fayl", fileList[0].originFileObj);
       }
-      await api.put(`${API_ENDPOINTS.HUJJATLAR.LIST}${id}/`, formData, {
+      await api.patch(`${API_ENDPOINTS.HUJJATLAR.LIST}${id}/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       message.success("Hujjat muvaffaqiyatli yangilandi");
@@ -211,18 +258,17 @@ const HujjatSinglePage = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors mb-3 cursor-pointer"
         >
           <ArrowLeftOutlined className="text-[10px]" />
           Hujjatlar
         </button>
 
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-1">
-              Hujjat #{data.id} · v{data.versiya}
-            </p>
-            <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">{data.nomi}</h1>
+            <h1 className="text-2xl pl-1 font-semibold text-slate-800 tracking-tight">
+              {data.nomi}
+            </h1>
           </div>
 
           <div className="flex items-center gap-2 mt-1">
@@ -230,7 +276,7 @@ const HujjatSinglePage = () => {
 
             <button
               onClick={handleEditOpen}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 cursor-pointer hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150"
             >
               <EditOutlined className="text-[11px]" />
               Tahrirlash
@@ -239,7 +285,7 @@ const HujjatSinglePage = () => {
             <button
               onClick={handleDelete}
               disabled={deleteLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 cursor-pointer py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50"
             >
               <DeleteOutlined className="text-[11px]" />
               O'chirish
@@ -250,7 +296,6 @@ const HujjatSinglePage = () => {
 
       {/* Main card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-
         {/* Details grid */}
         <SectionDivider title="Asosiy ma'lumotlar" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6">
@@ -283,7 +328,9 @@ const HujjatSinglePage = () => {
               <FileTextOutlined className="text-slate-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-700">{data.fayl_turi || "Fayl"}</p>
+              <p className="text-sm font-medium text-slate-700">
+                {data.fayl_turi || "Fayl"}
+              </p>
               <p className="text-xs text-slate-400">{data.fayl_hajmi} KB</p>
             </div>
           </div>
@@ -304,7 +351,9 @@ const HujjatSinglePage = () => {
         {data.izoh && (
           <>
             <SectionDivider title="Izoh" />
-            <p className="text-sm text-slate-600 leading-relaxed">{data.izoh}</p>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {data.izoh}
+            </p>
           </>
         )}
 
@@ -313,7 +362,9 @@ const HujjatSinglePage = () => {
           <>
             <SectionDivider title="Rad sababi" />
             <div className="bg-rose-50 border border-rose-100 rounded-xl px-4 py-3">
-              <p className="text-sm text-rose-600 leading-relaxed">{data.rad_sababi}</p>
+              <p className="text-sm text-rose-600 leading-relaxed">
+                {data.rad_sababi}
+              </p>
             </div>
           </>
         )}
@@ -332,7 +383,9 @@ const HujjatSinglePage = () => {
             <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
               <EditOutlined className="text-slate-500 text-sm" />
             </div>
-            <span className="text-base font-semibold text-slate-800">Hujjatni tahrirlash</span>
+            <span className="text-base font-semibold text-slate-800">
+              Hujjatni tahrirlash
+            </span>
           </div>
         }
         open={editOpen}
@@ -341,13 +394,19 @@ const HujjatSinglePage = () => {
         okText="Saqlash"
         cancelText="Bekor qilish"
         confirmLoading={editLoading}
-        okButtonProps={{ className: "!bg-slate-800 !border-slate-800 hover:!bg-slate-700" }}
+        okButtonProps={{
+          className: "!bg-slate-800 !border-slate-800 hover:!bg-slate-700",
+        }}
         width={560}
       >
         <Form form={form} layout="vertical" className="pt-2">
           <Form.Item
             name="nomi"
-            label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Nomi</span>}
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Nomi
+              </span>
+            }
             rules={[{ required: true, message: "Nomini kiriting" }]}
           >
             <Input className="rounded-lg" placeholder="Hujjat nomi" />
@@ -356,24 +415,62 @@ const HujjatSinglePage = () => {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="kategoriya"
-              label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Kategoriya</span>}
+              label={
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Kategoriya
+                </span>
+              }
               rules={[{ required: true, message: "Kategoriyani kiriting" }]}
             >
-              <Input type="number" className="rounded-lg" placeholder="Kategoriya ID" />
+              <Select
+                showSearch
+                loading={false}
+                placeholder="Kategoriyani tanlang"
+                optionFilterProp="label"
+                className="rounded-lg"
+                options={(Array.isArray(kategoriyalar)
+                  ? kategoriyalar
+                  : [kategoriyalar]
+                ).map((k: any) => ({
+                  value: k.id,
+                  label: k.nomi,
+                }))}
+              />
             </Form.Item>
 
             <Form.Item
               name="boshqarma"
-              label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Boshqarma</span>}
+              label={
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Boshqarma
+                </span>
+              }
               rules={[{ required: true, message: "Boshqarmani kiriting" }]}
             >
-              <Input type="number" className="rounded-lg" placeholder="Boshqarma ID" />
+              <Select
+                showSearch
+                loading={false}
+                placeholder="Boshqarmani tanlang"
+                optionFilterProp="label"
+                className="rounded-lg"
+                options={(Array.isArray(boshqarmalar)
+                  ? boshqarmalar
+                  : [boshqarmalar]
+                ).map((b: any) => ({
+                  value: b.id,
+                  label: b.nomi,
+                }))}
+              />
             </Form.Item>
           </div>
 
           <Form.Item
             name="obyekt"
-            label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Obyekt</span>}
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Obyekt
+              </span>
+            }
             rules={[{ required: true, message: "Obyektni tanlang" }]}
           >
             <Select
@@ -389,7 +486,11 @@ const HujjatSinglePage = () => {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="holat"
-              label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Holat</span>}
+              label={
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Holat
+                </span>
+              }
               rules={[{ required: true, message: "Holatni tanlang" }]}
             >
               <Select
@@ -405,19 +506,30 @@ const HujjatSinglePage = () => {
 
             <Form.Item
               name="muddat"
-              label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Muddat</span>}
+              label={
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Muddat
+                </span>
+              }
               rules={[{ required: true, message: "Muddatni kiriting" }]}
             >
               <DatePicker className="w-full rounded-lg" format="YYYY-MM-DD" />
             </Form.Item>
           </div>
 
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.holat !== curr.holat}>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, curr) => prev.holat !== curr.holat}
+          >
             {({ getFieldValue }) =>
               getFieldValue("holat") === "rad_etildi" ? (
                 <Form.Item
                   name="rad_sababi"
-                  label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rad sababi</span>}
+                  label={
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Rad sababi
+                    </span>
+                  }
                   rules={[{ required: true, message: "Rad sababini kiriting" }]}
                 >
                   <Input className="rounded-lg" placeholder="Rad sababi" />
@@ -428,13 +540,25 @@ const HujjatSinglePage = () => {
 
           <Form.Item
             name="izoh"
-            label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Izoh</span>}
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Izoh
+              </span>
+            }
           >
-            <Input.TextArea rows={3} className="rounded-lg" placeholder="Izoh (ixtiyoriy)" />
+            <Input.TextArea
+              rows={3}
+              className="rounded-lg"
+              placeholder="Izoh (ixtiyoriy)"
+            />
           </Form.Item>
 
           <Form.Item
-            label={<span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Fayl</span>}
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Fayl
+              </span>
+            }
           >
             <Upload
               fileList={fileList}
@@ -450,7 +574,8 @@ const HujjatSinglePage = () => {
             </Upload>
             {data.fayl && fileList.length === 0 && (
               <p className="text-xs text-slate-400 mt-1.5">
-                Joriy fayl: {data.fayl_turi} ({data.fayl_hajmi} KB) — yangi fayl tanlanmasa o'zgarmaydi
+                Joriy fayl: {data.fayl_turi} ({data.fayl_hajmi} KB) — yangi fayl
+                tanlanmasa o'zgarmaydi
               </p>
             )}
           </Form.Item>

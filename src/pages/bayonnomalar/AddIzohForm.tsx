@@ -46,9 +46,9 @@ export const AddIzohForm = ({ topshiriqId, onSuccess }: AddIzohFormProps) => {
       formData.append("matn", matn.trim());
       if (fayl) formData.append("fayl", fayl);
 
-      const res = await api.put<Izoh>(
+      const res = await api.post<Izoh>(
         // Adjust endpoint key to match your API_ENDPOINTS shape
-        `${API_ENDPOINTS.BAYONNOMALAR.LIST}topshiriqlar/${topshiriqId}/`,
+        `${API_ENDPOINTS.BAYONNOMALAR.LIST}topshiriqlar/${topshiriqId}/izoh_qoshish/`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } },
       );
@@ -70,6 +70,7 @@ export const AddIzohForm = ({ topshiriqId, onSuccess }: AddIzohFormProps) => {
       handleSubmit();
     }
   };
+  console.log(matn);
 
   return (
     <div

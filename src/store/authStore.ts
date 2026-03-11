@@ -1,8 +1,11 @@
+// src/store/authStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AxiosError } from "axios";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type AuthUser = {
   id: number;
@@ -25,13 +28,7 @@ type LoginPayload = {
 
 type RegisterPayload = Record<string, unknown>;
 
-type LoginResponse = {
-  user: AuthUser;
-  access?: string;
-  token?: string;
-};
-
-type RegisterResponse = {
+type AuthResponse = {
   user: AuthUser;
   access?: string;
   token?: string;
@@ -44,7 +41,7 @@ type ApiErrorBody = {
   detail?: string;
 };
 
-type AuthActionResult = {
+export type AuthActionResult = {
   success: boolean;
   error?: string;
 };
@@ -63,23 +60,33 @@ type AuthState = {
   clearError: () => void;
 };
 
-const getErrorMessage = (error: unknown, fallback: string) => {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
   const axiosError = error as AxiosError<ApiErrorBody>;
   return (
-    axiosError.response?.data?.message ||
-    axiosError.response?.data?.detail ||
-    axiosError.message ||
+    axiosError.response?.data?.message ??
+    axiosError.response?.data?.detail ??
+    axiosError.message ??
     fallback
   );
 };
 
-const normalizeMeUser = (data: MeResponse): AuthUser => {
-  if ("user" in data) {
-    return data.user;
-  }
-
-  return data;
+const extractToken = (data: AuthResponse): string => {
+  const token = data.access ?? data.token;
+  if (!token) throw new Error("Authentication token missing in response");
+  return token;
 };
+
+const normalizeMeResponse = (data: MeResponse): AuthUser =>
+  "user" in data ? data.user : data;
+
+const persistAuthToken = (token: string) =>
+  localStorage.setItem("auth_token", token);
+
+const clearAuthToken = () => localStorage.removeItem("auth_token");
+
+// ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -93,21 +100,16 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post<LoginResponse>(
+          const { data } = await api.post<AuthResponse>(
             API_ENDPOINTS.AUTH.LOGIN,
             credentials,
           );
-          const { user, access, token } = response.data;
-          const authToken = access ?? token;
+          const token = extractToken(data);
 
-          if (!authToken) {
-            throw new Error("Authentication token is missing");
-          }
-
-          localStorage.setItem("auth_token", authToken);
+          persistAuthToken(token);
           set({
-            user,
-            token: authToken,
+            user: data.user,
+            token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -115,30 +117,25 @@ export const useAuthStore = create<AuthState>()(
 
           return { success: true };
         } catch (error) {
-          const errorMessage = getErrorMessage(error, "Login failed");
-          set({ error: errorMessage, isLoading: false });
-          return { success: false, error: errorMessage };
+          const message = getErrorMessage(error, "Login failed");
+          set({ error: message, isLoading: false });
+          return { success: false, error: message };
         }
       },
 
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post<RegisterResponse>(
+          const { data } = await api.post<AuthResponse>(
             API_ENDPOINTS.AUTH.REGISTER,
             userData,
           );
-          const { user, access, token } = response.data;
-          const authToken = access ?? token;
+          const token = extractToken(data);
 
-          if (!authToken) {
-            throw new Error("Authentication token is missing");
-          }
-
-          localStorage.setItem("auth_token", authToken);
+          persistAuthToken(token);
           set({
-            user,
-            token: authToken,
+            user: data.user,
+            token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -146,9 +143,9 @@ export const useAuthStore = create<AuthState>()(
 
           return { success: true };
         } catch (error) {
-          const errorMessage = getErrorMessage(error, "Registration failed");
-          set({ error: errorMessage, isLoading: false });
-          return { success: false, error: errorMessage };
+          const message = getErrorMessage(error, "Registration failed");
+          set({ error: message, isLoading: false });
+          return { success: false, error: message };
         }
       },
 
@@ -157,9 +154,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           await api.post(API_ENDPOINTS.AUTH.LOGOUT);
         } catch (error) {
-          console.error("Logout error:", error);
+          // Swallow — we clear local state regardless
+          console.error("[Auth] Logout endpoint error:", error);
         } finally {
-          localStorage.removeItem("auth_token");
+          clearAuthToken();
           set({
             user: null,
             token: null,
@@ -171,7 +169,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchUser: async () => {
-        const token = get().token || localStorage.getItem("auth_token");
+        const token = get().token ?? localStorage.getItem("auth_token");
+
         if (!token) {
           set({ isAuthenticated: false, isLoading: false });
           return;
@@ -179,18 +178,14 @@ export const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true, error: null });
         try {
-          const response = await api.get<MeResponse>(
+          const { data } = await api.get<MeResponse>(
             API_ENDPOINTS.USERS.PROFILE,
           );
-          const user = normalizeMeUser(response.data);
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+          const user = normalizeMeResponse(data);
+
+          set({ user, token, isAuthenticated: true, isLoading: false });
         } catch (error) {
-          localStorage.removeItem("auth_token");
+          clearAuthToken();
           set({
             user: null,
             token: null,
@@ -203,13 +198,11 @@ export const useAuthStore = create<AuthState>()(
 
       updateUser: (userData) => {
         set((state) => ({
-          user: state.user ? { ...state.user, ...userData } : state.user,
+          user: state.user ? { ...state.user, ...userData } : null,
         }));
       },
 
-      clearError: () => {
-        set({ error: null });
-      },
+      clearError: () => set({ error: null }),
     }),
     {
       name: "auth-storage",

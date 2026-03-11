@@ -16,7 +16,8 @@ import {
   Button,
   Popconfirm,
   message,
-  Space,
+  Upload,
+  Select,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -31,6 +32,8 @@ import {
   DeleteOutlined,
   PlusCircleOutlined,
   MinusCircleOutlined,
+  UploadOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -58,11 +61,28 @@ interface ApiResponse {
   results: Bayonnoma[];
 }
 
+interface User {
+  id: number;
+  fio: string;
+  lavozim: string;
+  lavozim_kodi: string;
+  boshqarma_nomi: string;
+  is_active: boolean;
+  avatar: string | null;
+}
+
+interface UsersApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: User[];
+}
+
 interface PostPayload {
   raqami: string;
   sana: string;
   mavzu: string;
-  fayl: string;
+  fayl: File | null;
   ishtirokchilar: string;
   izoh: string;
   topshiriqlar: Record<string, string>[];
@@ -72,7 +92,7 @@ interface PutPayload {
   raqami: string;
   sana: string;
   mavzu: string;
-  fayl: string;
+  fayl: File | null;
   ishtirokchilar: string;
   izoh: string;
 }
@@ -133,8 +153,47 @@ const StatCard = ({
   </div>
 );
 
-// Shared base fields used in both Create (POST) and Edit (PUT) modals
-const BaseFormFields = () => (
+// ─── User Option with avatar/initials ─────────────────────────────────────────
+
+const UserOptionLabel = ({ user }: { user: User }) => {
+  const initials = user.fio
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      {user.avatar ? (
+        <img
+          src={user.avatar?.replace("http://", "https://")}
+          alt={user.fio}
+          className="h-6 w-6 rounded-full object-cover shrink-0"
+        />
+      ) : (
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600">
+          {initials}
+        </div>
+      )}
+      <div className="flex flex-col leading-tight min-w-0">
+        <span className="text-sm text-slate-800 font-medium truncate">
+          {user.fio}
+        </span>
+        <span className="text-xs text-slate-400 truncate">{user.lavozim}</span>
+      </div>
+    </div>
+  );
+};
+
+// ─── Shared base fields (POST & PUT) ──────────────────────────────────────────
+
+const BaseFormFields = ({
+  users,
+  usersLoading,
+}: {
+  users: User[];
+  usersLoading: boolean;
+}) => (
   <>
     <div className="grid grid-cols-2 gap-4">
       <Form.Item
@@ -173,22 +232,87 @@ const BaseFormFields = () => (
       />
     </Form.Item>
 
-    <Form.Item name="fayl" label={<FieldLabel>Fayl (URL)</FieldLabel>}>
-      <Input
-        placeholder="https://..."
-        className="rounded-lg!"
-        prefix={<FileTextOutlined className="text-slate-300" />}
-      />
+    <Form.Item
+      name="fayl"
+      label={<FieldLabel>Fayl yuklash</FieldLabel>}
+      valuePropName="fileList"
+      getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+    >
+      <Upload beforeUpload={() => false} maxCount={1}>
+        <Button
+          icon={<UploadOutlined />}
+          className="rounded-lg! flex items-center gap-2"
+        >
+          Fayl tanlash
+        </Button>
+      </Upload>
     </Form.Item>
 
+    {/* ── Ishtirokchilar: multi-select from users API ── */}
     <Form.Item
       name="ishtirokchilar"
       label={<FieldLabel>Ishtirokchilar</FieldLabel>}
     >
-      <TextArea
-        rows={2}
-        placeholder="Ishtirokchilar ro'yxatini kiriting..."
-        className="rounded-lg!"
+      <Select
+        mode="multiple"
+        placeholder={
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <UserOutlined />
+            Ishtirokchilarni tanlang...
+          </span>
+        }
+        loading={usersLoading}
+        disabled={usersLoading}
+        className="rounded-lg! w-full!"
+        optionFilterProp="search"
+        showSearch
+        allowClear
+        maxTagCount="responsive"
+        optionLabelProp="tag"
+        filterOption={(input, option) =>
+          (option?.search ?? "").toLowerCase().includes(input.toLowerCase())
+        }
+        options={users
+          ?.filter((u) => u.is_active)
+          ?.map((u) => ({
+            value: u.fio, // sent to backend as fio string
+            search: `${u.fio} ${u.lavozim} ${u.boshqarma_nomi}`,
+            label: <UserOptionLabel user={u} />,
+            // shown inside the select box as tag
+            tag: (
+              <span className="flex items-center gap-1">
+                {u.avatar ? (
+                  <img
+                    src={u.avatar?.replace("http://", "https://")}
+                    alt={u.fio}
+                    className="h-4 w-4 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-[8px] font-bold text-indigo-600">
+                    {u.fio
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((w) => w[0])
+                      .join("")}
+                  </span>
+                )}
+                <span className="text-xs">{u.fio.split(" ")[0]}</span>
+              </span>
+            ),
+          }))}
+        popupClassName="ishtirokchilar-dropdown"
+        listHeight={260}
+        notFoundContent={
+          usersLoading ? (
+            <div className="py-4 text-center text-xs text-slate-400">
+              Yuklanmoqda...
+            </div>
+          ) : (
+            <div className="py-4 text-center text-xs text-slate-400">
+              Foydalanuvchi topilmadi
+            </div>
+          )
+        }
       />
     </Form.Item>
 
@@ -210,6 +334,10 @@ const BayonnomalarPage = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Users state
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Bayonnoma | null>(null);
@@ -219,7 +347,7 @@ const BayonnomalarPage = () => {
   const [editForm] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
 
-  // ── GET ────────────────────────────────────────────────────────────────────
+  // ── GET Bayonnomalar ───────────────────────────────────────────────────────
   const getBayonnomalar = async () => {
     setLoading(true);
     try {
@@ -233,8 +361,24 @@ const BayonnomalarPage = () => {
     }
   };
 
+  // ── GET All Users (paginated — fetch all pages) ────────────────────────────
+  const getAllUsers = async () => {
+    setUsersLoading(true);
+    try {
+      let url: string | null = "/auth/users/?all=true";
+      const res = await api.get<UsersApiResponse>(url);
+
+      setUsers(res?.data);
+    } catch {
+      messageApi.error("Foydalanuvchilarni yuklashda xatolik.");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     getBayonnomalar();
+    getAllUsers();
   }, []);
 
   // ── POST ───────────────────────────────────────────────────────────────────
@@ -243,7 +387,11 @@ const BayonnomalarPage = () => {
       const values = await createForm.validateFields();
       setSubmitting(true);
 
-      // Transform Form.List nested key-value pairs → array of plain objects
+      // ishtirokchilar is now string[] of fio values → join as comma-separated string
+      const ishtirokchilar: string = Array.isArray(values.ishtirokchilar)
+        ? values.ishtirokchilar.join(", ")
+        : (values.ishtirokchilar ?? "");
+
       const topshiriqlar: Record<string, string>[] = (
         values.topshiriqlar ?? []
       ).map((item: { props?: { key: string; value: string }[] }) => {
@@ -254,17 +402,20 @@ const BayonnomalarPage = () => {
         return obj;
       });
 
-      const payload: PostPayload = {
-        raqami: values.raqami,
-        sana: dayjs(values.sana).format("YYYY-MM-DD"),
-        mavzu: values.mavzu,
-        fayl: values.fayl ?? "",
-        ishtirokchilar: values.ishtirokchilar ?? "",
-        izoh: values.izoh ?? "",
-        topshiriqlar,
-      };
+      const file = values.fayl?.[0]?.originFileObj ?? null;
 
-      await api.post(API_ENDPOINTS.BAYONNOMALAR.LIST, payload);
+      const formData = new FormData();
+      formData.append("raqami", values.raqami);
+      formData.append("sana", dayjs(values.sana).format("YYYY-MM-DD"));
+      formData.append("mavzu", values.mavzu);
+      if (file) formData.append("fayl", file);
+      formData.append("ishtirokchilar", ishtirokchilar);
+      formData.append("izoh", values.izoh ?? "");
+      // formData.append("topshiriqlar", JSON.stringify(topshiriqlar));
+
+      await api.post(API_ENDPOINTS.BAYONNOMALAR.LIST, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       messageApi.success("Bayonnoma muvaffaqiyatli qo'shildi!");
       createForm.resetFields();
       setCreateOpen(false);
@@ -285,7 +436,10 @@ const BayonnomalarPage = () => {
       sana: dayjs(record.sana),
       mavzu: record.mavzu,
       fayl: "",
-      ishtirokchilar: "",
+      // Parse existing comma-separated string back to array for the Select
+      ishtirokchilar: record.ishtirokchilar
+        ? record.ishtirokchilar.split(", ").map((s: string) => s.trim())
+        : [],
       izoh: "",
     });
     setEditOpen(true);
@@ -297,18 +451,24 @@ const BayonnomalarPage = () => {
       const values = await editForm.validateFields();
       setSubmitting(true);
 
-      const payload: PutPayload = {
-        raqami: values.raqami,
-        sana: dayjs(values.sana).format("YYYY-MM-DD"),
-        mavzu: values.mavzu,
-        fayl: values.fayl ?? "",
-        ishtirokchilar: values.ishtirokchilar ?? "",
-        izoh: values.izoh ?? "",
-      };
+      const ishtirokchilar: string = Array.isArray(values.ishtirokchilar)
+        ? values.ishtirokchilar.join(", ")
+        : (values.ishtirokchilar ?? "");
+
+      const file = values.fayl?.[0]?.originFileObj ?? null;
+
+      const formData = new FormData();
+      formData.append("raqami", values.raqami);
+      formData.append("sana", dayjs(values.sana).format("YYYY-MM-DD"));
+      formData.append("mavzu", values.mavzu);
+      if (file) formData.append("fayl", file);
+      formData.append("ishtirokchilar", ishtirokchilar);
+      formData.append("izoh", values.izoh ?? "");
 
       await api.put(
         `${API_ENDPOINTS.BAYONNOMALAR.LIST}${editTarget.id}/`,
-        payload,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
       messageApi.success("Bayonnoma muvaffaqiyatli yangilandi!");
       editForm.resetFields();
@@ -469,58 +629,16 @@ const BayonnomalarPage = () => {
         </div>
       ),
     },
-    // ── Actions column ──────────────────────────────────────────────────────
-    {
-      title: <FieldLabel>Amallar</FieldLabel>,
-      key: "actions",
-      width: 110,
-      align: "center",
-      render: (_, record) => (
-        <Space size={6}>
-          {/* PUT trigger */}
-          <Tooltip title="Tahrirlash">
-            <button
-              onClick={() => openEdit(record)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-600 transition hover:bg-amber-100 hover:border-amber-300"
-            >
-              <EditOutlined style={{ fontSize: 13 }} />
-            </button>
-          </Tooltip>
-
-          {/* DELETE trigger */}
-          <Popconfirm
-            title={
-              <span className="font-semibold text-slate-800">
-                O'chirishni tasdiqlaysizmi?
-              </span>
-            }
-            description={
-              <span className="text-slate-500 text-xs">
-                «{record.raqami}» bayonnomasi butunlay o'chiriladi.
-              </span>
-            }
-            onConfirm={() => handleDelete(record.id)}
-            okText="O'chirish"
-            cancelText="Bekor"
-            okButtonProps={{ danger: true }}
-          >
-            <Tooltip title="O'chirish">
-              <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition hover:bg-red-100 hover:border-red-300">
-                <DeleteOutlined style={{ fontSize: 13 }} />
-              </button>
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
-    },
   ];
+
+  console.log(users);
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <>
       {contextHolder}
 
-      <div className="min-h-screen bg-slate-50 px-6 py-8">
+      <div className="min-h-screen bg-slate-50 px-6 py-8 rounded-xl">
         {/* ── Header ── */}
         <div className="mb-8 flex items-start justify-between">
           <div>
@@ -546,14 +664,13 @@ const BayonnomalarPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* POST trigger */}
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => setCreateOpen(true)}
               className="rounded-xl! h-9! px-5! font-semibold! bg-indigo-600! border-indigo-600! hover:bg-indigo-700!"
             >
-              Qo'shish
+              Yangi bayonnoma yaratish
             </Button>
           </div>
         </div>
@@ -647,7 +764,7 @@ const BayonnomalarPage = () => {
         confirmLoading={submitting}
         width={640}
         okText="Saqlash"
-        cancelText="Bekor"
+        cancelText="Bekor qilish"
         okButtonProps={{
           className:
             "!rounded-lg !bg-indigo-600 !border-indigo-600 hover:!bg-indigo-700 !font-semibold",
@@ -662,25 +779,13 @@ const BayonnomalarPage = () => {
               <p className="font-bold text-slate-800 mb-0 leading-tight text-base">
                 Yangi bayonnoma qo'shish
               </p>
-              <p className="text-xs text-slate-400 font-normal mt-0.5">
-                POST · {API_ENDPOINTS.BAYONNOMALAR.LIST}
-              </p>
             </div>
           </div>
         }
         styles={{ body: { paddingTop: 20 } }}
       >
         <Form form={createForm} layout="vertical" size="middle">
-          <BaseFormFields />
-
-          {/* ── topshiriqlar (POST-only dynamic field) ── */}
-          <div className="mb-3 mt-1">
-            <FieldLabel>Topshiriqlar</FieldLabel>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Har bir topshiriq uchun ixtiyoriy kalit–qiymat xususiyatlar
-              qo'shing.
-            </p>
-          </div>
+          <BaseFormFields users={users} usersLoading={usersLoading} />
 
           <Form.List name="topshiriqlar">
             {(fields, { add, remove }) => (
@@ -690,7 +795,6 @@ const BayonnomalarPage = () => {
                     key={field.key}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4"
                   >
-                    {/* Topshiriq header */}
                     <div className="mb-3 flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Topshiriq #{field.name + 1}
@@ -704,7 +808,6 @@ const BayonnomalarPage = () => {
                       </button>
                     </div>
 
-                    {/* Key-value props for this topshiriq */}
                     <Form.List name={[field.name, "props"]}>
                       {(subFields, { add: addProp, remove: removeProp }) => (
                         <div className="space-y-2">
@@ -742,7 +845,6 @@ const BayonnomalarPage = () => {
                               </button>
                             </div>
                           ))}
-
                           <button
                             type="button"
                             onClick={() => addProp()}
@@ -755,15 +857,6 @@ const BayonnomalarPage = () => {
                     </Form.List>
                   </div>
                 ))}
-
-                {/* Add topshiriq button */}
-                <button
-                  type="button"
-                  onClick={() => add()}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 py-3 text-sm font-medium text-indigo-600 transition hover:bg-indigo-50 hover:border-indigo-400"
-                >
-                  <PlusOutlined /> Topshiriq qo'shish
-                </button>
               </div>
             )}
           </Form.List>
@@ -809,7 +902,7 @@ const BayonnomalarPage = () => {
         styles={{ body: { paddingTop: 20 } }}
       >
         <Form form={editForm} layout="vertical" size="middle">
-          <BaseFormFields />
+          <BaseFormFields users={users} usersLoading={usersLoading} />
         </Form>
       </Modal>
     </>
