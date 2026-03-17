@@ -200,8 +200,6 @@ const XodimlarSinglePage = () => {
 
   if (!user) return null;
 
-  console.log(user);
-
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       <div className="max-w-3xl mx-auto">

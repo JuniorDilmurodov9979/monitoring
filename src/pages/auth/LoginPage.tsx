@@ -160,7 +160,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-cyan-300 
-                         transition-colors z-20 hover:scale-110 duration-200"
+                         transition-colors z-20 hover:scale-110 duration-200 cursor-pointer"
             >
               {showPassword ? (
                 <EyeInvisibleOutlined className="text-xl" />
@@ -193,7 +193,7 @@ export default function LoginPage() {
             />
 
             {/* Button content */}
-            <div className="relative px-6 py-4 font-bold text-lg tracking-wide">
+            <div className="relative px-6 py-4 font-bold text-lg tracking-wide cursor-pointer">
               {isLoading ? (
                 <span className="flex items-center justify-center gap-3">
                   <svg

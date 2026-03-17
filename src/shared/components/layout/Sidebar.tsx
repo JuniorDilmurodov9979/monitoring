@@ -14,15 +14,15 @@ import {
 
 const navItems = [
   { label: "Bosh sahifa", path: "/", icon: LayoutDashboard },
-  { label: "Hujjatlar", path: "/hujjatlar", icon: FileText },
-  { label: "Obyektlar", path: "/obyekt", icon: Building2 },
   { label: "Boshqarma", path: "/boshqarma", icon: Landmark },
+  { label: "Obyektlar", path: "/obyekt", icon: Building2 },
+  { label: "Hujjatlar", path: "/hujjatlar", icon: FileText },
   { label: "Bayonnomalar", path: "/bayonnomalar", icon: ClipboardList },
   { label: "Topshiriqlar", path: "/topshiriqlar", icon: CheckSquare },
-  { label: "Xodimlar", path: "/users", icon: Users },
+  { label: "Jarimalar", path: "/jarimalar", icon: Banknote },
   { label: "Chat xonalar", path: "/chats", icon: MessageSquare },
   { label: "Talablar", path: "/talablar", icon: Pin },
-  { label: "Jarimalar", path: "/jarimalar", icon: Banknote },
+  { label: "Xodimlar", path: "/users", icon: Users },
 ];
 
 const Sidebar = () => {

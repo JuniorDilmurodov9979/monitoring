@@ -25,7 +25,7 @@ import {
   TagOutlined,
   SendOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { formatDate } from "@/shared/components/const/CustomUI";
 import api from "@/services/api/axios";
 
@@ -166,10 +166,12 @@ const InfoRow = ({
   </div>
 );
 
-const TalablarSinglePage = ({ id = 1 }: { id?: number }) => {
+const TalablarSinglePage = () => {
   const [data, setData] = useState<TalabDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { id } = useParams();
+  console.log(data);
 
   useEffect(() => {
     const fetchTalab = async () => {
@@ -205,7 +207,7 @@ const TalablarSinglePage = ({ id = 1 }: { id?: number }) => {
       <div className="flex items-center gap-3 mb-6">
         <Button
           icon={<ArrowLeftOutlined />}
-          className="border-slate-200 text-slate-500 hover:text-blue-500 hover:border-blue-300 rounded-lg"
+          className="border-slate-200 py-2!  rounded-xl! text-slate-500 hover:text-blue-500 hover:border-blue-300"
           size="middle"
           onClick={() => navigate(-1)}
         >
@@ -215,7 +217,7 @@ const TalablarSinglePage = ({ id = 1 }: { id?: number }) => {
         <span className="text-xs text-slate-400 font-mono">
           Talab #{data.id}
         </span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <Tag
             icon={cfg.icon}
             style={{
@@ -235,6 +237,12 @@ const TalablarSinglePage = ({ id = 1 }: { id?: number }) => {
               icon={<ExclamationCircleFilled />}
               color="error"
               className="rounded-full ml-1"
+              style={{
+                borderRadius: 20,
+                padding: "3px 12px",
+                fontWeight: 600,
+                fontSize: 12,
+              }}
             >
               Kechikkan
             </Tag>

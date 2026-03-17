@@ -252,12 +252,10 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
-  },
-
-  // Catch-all route for 404 - should be at the end
-  {
-    path: "*",
-    element: <NotFoundPage />,
   },
 ]);

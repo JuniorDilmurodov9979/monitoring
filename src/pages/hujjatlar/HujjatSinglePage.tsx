@@ -18,7 +18,6 @@ import {
   FileTextOutlined,
   DownloadOutlined,
   ClockCircleOutlined,
-  FolderOutlined,
 } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 import dayjs from "dayjs";
@@ -121,6 +120,7 @@ const HujjatSinglePage = () => {
   const [kategoriyalar, setKategoriyalar] = useState([]);
   const [obyektlarLoading, setObyektlarLoading] = useState(false);
   const [boshqarmalar, setBoshqarmalar] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [form] = Form.useForm();
 
@@ -244,6 +244,17 @@ const HujjatSinglePage = () => {
     });
   };
 
+  const handFileOpen = () => {
+    if (
+      data?.fayl &&
+      data?.fayl_turi !== "DOCX" &&
+      data?.fayl_turi !== "PDF" &&
+      data?.fayl_turi !== "XLSX"
+    ) {
+      setPreviewOpen((prev) => !prev);
+    }
+  };
+
   if (loading || !data) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -252,8 +263,10 @@ const HujjatSinglePage = () => {
     );
   }
 
+  console.log(data);
+
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8">
+    <div className="min-h-screen bg-gray-50 px-6 py-8 rounded-xl">
       {/* Back + breadcrumb */}
       <div className="mb-6">
         <button
@@ -328,15 +341,18 @@ const HujjatSinglePage = () => {
               <FileTextOutlined className="text-slate-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-700">
+              <button
+                onClick={handFileOpen}
+                className="text-sm font-medium text-slate-700 cursor-pointer hover:underline"
+              >
                 {data.fayl_turi || "Fayl"}
-              </p>
+              </button>
               <p className="text-xs text-slate-400">{data.fayl_hajmi} KB</p>
             </div>
           </div>
           {data.fayl && (
             <a
-              href={data.fayl}
+              href={data.fayl?.replace("http://", "https://")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 text-xs font-medium rounded-lg shadow-sm transition-all"
@@ -581,6 +597,29 @@ const HujjatSinglePage = () => {
           </Form.Item>
         </Form>
       </Modal>
+      {previewOpen ? (
+        <div className="absolute w-125 h-80 bg-black/50 top-50 right-110 flex items-center justify-center z-50 rounded-xl">
+          <div>
+            <div className="flex justify-end items-end">
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="text-white cursor-pointer p-2 rounded-lg border mr-1 my-1"
+              >
+                X
+              </button>
+            </div>
+            {data?.fayl ? (
+              <img
+                className="w-full h-full"
+                src={data.fayl?.replace("http://", "https://")}
+                alt=""
+              />
+            ) : (
+              <p className="text-white text-sm">Fayl mavjud emas</p>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

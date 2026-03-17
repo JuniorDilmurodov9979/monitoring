@@ -229,10 +229,7 @@ const HujjatlarPage = () => {
       title: "Nomi",
       dataIndex: "nomi",
       render: (_, record) => (
-        <button
-          onClick={() => navigate(`/hujjatlar/${record.id}`)}
-          className="flex items-center gap-2 text-left group cursor-pointer!"
-        >
+        <button className="flex items-center gap-2 text-left group cursor-pointer!">
           <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
             <FileTextOutlined className="text-slate-400 group-hover:text-blue-500 text-xs transition-colors" />
           </span>
@@ -419,6 +416,10 @@ const HujjatlarPage = () => {
               pagination={false}
               className="hujjatlar-table"
               rowClassName="hover:bg-slate-50 transition-colors"
+              onRow={(record) => ({
+                onClick: () => navigate(`/hujjatlar/${record.id}`),
+                style: { cursor: "pointer" },
+              })}
               locale={{ emptyText: <EmptyState /> }}
             />
             <div className="flex justify-between items-center px-5 py-4 border-t border-slate-100">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Row, Col, Spin, Alert } from "antd";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
@@ -39,16 +40,23 @@ const SECTIONS = [
       </svg>
     ),
     cards: (s: DashboardStats) => [
-      { title: "Jami obyektlar", value: s.jami_obyektlar, variant: "neutral" },
+      {
+        title: "Jami obyektlar",
+        value: s.jami_obyektlar,
+        variant: "neutral",
+        href: "/obyekt",
+      },
       {
         title: "Muammoli obyektlar",
         value: s.muammoli_obyektlar,
         variant: "danger",
+        href: "/obyekt?filter=muammoli",
       },
       {
         title: "Tugatilgan obyektlar",
         value: s.tugatilgan_obyektlar,
         variant: "success",
+        href: "/obyekt?filter=tugatilgan",
       },
     ],
   },
@@ -71,16 +79,23 @@ const SECTIONS = [
       </svg>
     ),
     cards: (s: DashboardStats) => [
-      { title: "Jami hujjatlar", value: s.jami_hujjatlar, variant: "neutral" },
+      {
+        title: "Jami hujjatlar",
+        value: s.jami_hujjatlar,
+        variant: "neutral",
+        href: "/hujjatlar",
+      },
       {
         title: "Kutilmoqda",
         value: s.kutilmoqda_hujjatlar,
         variant: "warning",
+        href: "/hujjatlar?filter=kutilmoqda",
       },
       {
         title: "Kechikkan hujjatlar",
         value: s.kechikkan_hujjatlar,
         variant: "danger",
+        href: "/hujjatlar?filter=kechikkan",
       },
     ],
   },
@@ -107,16 +122,19 @@ const SECTIONS = [
         title: "Jami topshiriqlar",
         value: s.jami_topshiriqlar,
         variant: "neutral",
+        href: "/topshiriqlar",
       },
       {
         title: "Bajarilgan",
         value: s.bajarilgan_topshiriqlar,
         variant: "success",
+        href: "/topshiriqlar?filter=bajarilgan",
       },
       {
         title: "Kechikkan topshiriqlar",
         value: s.kechikkan_topshiriqlar,
         variant: "danger",
+        href: "/topshiriqlar?filter=kechikkan",
       },
     ],
   },
@@ -139,16 +157,23 @@ const SECTIONS = [
       </svg>
     ),
     cards: (s: DashboardStats) => [
-      { title: "Jami jarimalar", value: s.jami_jarimalar, variant: "neutral" },
+      {
+        title: "Jami jarimalar",
+        value: s.jami_jarimalar,
+        variant: "neutral",
+        href: "/jarimalar",
+      },
       {
         title: "Bu oy jarimalar (ball)",
         value: s.bu_oy_jarimalar,
         variant: "danger",
+        href: "/jarimalar?filter=bu_oy",
       },
       {
         title: "Eng yomon boshqarma",
         value: s.eng_yomon_boshqarma,
         variant: "warning",
+        href: "/jarimalar?filter=eng_yomon",
       },
     ],
   },
@@ -259,6 +284,7 @@ const DashboardPage = () => {
                     title={card.title}
                     value={card.value}
                     variant={card.variant}
+                    href={card.href}
                   />
                 </Col>
               ))}
@@ -322,19 +348,28 @@ const StatCard = ({
   title,
   value,
   variant = "neutral",
+  href,
 }: {
   title: string;
   value: number | string;
   variant?: string;
+  href?: string;
 }) => {
+  const navigate = useNavigate();
   const cfg = variantConfig[variant] ?? variantConfig.neutral;
+
+  const handleClick = () => {
+    if (href) navigate(href);
+  };
 
   return (
     <div
+      onClick={handleClick}
       className={`
         relative bg-white rounded-2xl border ${cfg.border}
         px-5 pt-5 pb-5 shadow-sm overflow-hidden
-        hover:shadow-md transition-shadow duration-200
+        hover:shadow-md transition-all duration-200
+        ${href ? "cursor-pointer hover:scale-[1.02] active:scale-[0.99]" : ""}
       `}
     >
       {/* Left accent bar */}
@@ -356,6 +391,25 @@ const StatCard = ({
       <p className={`text-3xl font-bold tabular-nums ${cfg.valueCls}`}>
         {value}
       </p>
+
+      {/* Arrow hint on hover */}
+      {href && (
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg
+            className="w-3.5 h-3.5 text-slate-300"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };

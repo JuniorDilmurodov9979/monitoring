@@ -294,7 +294,7 @@ const JarimalarPage = () => {
               type="primary"
               icon={<PlusOutlined />}
               onClick={openCreate}
-              className="bg-slate-800 border-slate-800 hover:bg-slate-700"
+              className="bg-slate-800 border-slate-800 hover:bg-slate-700 rounded-xl!"
             >
               Jarima qo'shish
             </Button>
@@ -368,7 +368,7 @@ const JarimalarPage = () => {
 
       {/* Boshqarma Statistika */}
       <Card
-        className="border border-slate-100 shadow-sm rounded-2xl mb-6"
+        className="border border-slate-100 shadow-sm rounded-2xl mb-6!"
         title={
           <span className="text-sm font-semibold text-slate-700">
             Boshqarmalar reytingi
