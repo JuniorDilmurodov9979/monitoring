@@ -257,7 +257,11 @@ const HujjatlarPage = () => {
     {
       title: "Boshqarma",
       dataIndex: "boshqarma_nomi",
-      render: (val) => <span className="text-slate-600 text-sm">{val}</span>,
+      render: (val) => (
+        <span className="text-slate-600 w-full flex items-center justify-center text-sm">
+          <span className="">{val}</span>
+        </span>
+      ),
     },
     {
       title: "Kategoriya",
@@ -487,7 +491,7 @@ const HujjatlarPage = () => {
 
           {/* Replace the grid with boshqarma and kategoriya */}
           <div className="grid grid-cols-2 gap-4">
-           <Form.Item
+            <Form.Item
               name="boshqarma"
               label={<FieldLabel>Boshqarma</FieldLabel>}
               rules={[{ required: true, message: "Boshqarma majburiy" }]}

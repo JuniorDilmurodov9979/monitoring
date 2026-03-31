@@ -132,7 +132,7 @@ const ChatCommentBox = ({ taskData, onSuccess }) => {
   const canSend = text.trim().length > 0 && !submitting;
 
   return (
-    <div className="flex items-end gap-3 px-4 py-3 bg-white border-t border-slate-100">
+    <div className="flex items-center gap-3 px-4 py-3 bg-white border-t border-slate-100">
       {/* User avatar */}
       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 flex-shrink-0 mb-0.5">
         <UserOutlined style={{ fontSize: 13 }} />
@@ -186,12 +186,7 @@ const ChatCommentBox = ({ taskData, onSuccess }) => {
             />
           </svg>
         ) : (
-          <svg
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-4 h-4"
-            style={{ transform: "rotate(45deg)" }}
-          >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>
         )}
@@ -251,7 +246,7 @@ const TopshiriqDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* ── Hero Header ── */}
       <div className={`bg-gradient-to-r ${cfg.bg} shadow-lg rounded-t-xl`}>
-        <div className="max-w-5xl mx-auto px-6 pt-5 pb-8">
+        <div className="max-w-7xl mx-auto px-6 pt-5 pb-8">
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate(-1)}
@@ -268,7 +263,7 @@ const TopshiriqDetailPage = () => {
                   Topshiriq
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white leading-snug max-w-xl">
+              <h1 className="text-2xl max-h-[300px] overflow-y-auto sm:text-3xl font-bold text-white leading-snug w-[90%]">
                 {data.mazmun}
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -301,7 +296,7 @@ const TopshiriqDetailPage = () => {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-5xl mx-auto px-6 -mt-4 pb-10 space-y-5">
+      <div className="max-w-7xl mx-auto px-6 -mt-4 pb-10 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Left column */}
           <div className="md:col-span-2 space-y-5">
@@ -363,7 +358,7 @@ const TopshiriqDetailPage = () => {
               >
                 {data.natija && (
                   <div className="mb-4">
-                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-1">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-2">
                       Natija
                     </p>
                     <p className="text-slate-700 text-sm leading-relaxed bg-slate-50 rounded-lg p-3 border border-slate-100">
@@ -373,7 +368,7 @@ const TopshiriqDetailPage = () => {
                 )}
                 {data.izoh && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-1">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-2">
                       Izoh
                     </p>
                     <p className="text-slate-700 text-sm leading-relaxed bg-slate-50 rounded-lg p-3 border border-slate-100">
@@ -390,7 +385,7 @@ const TopshiriqDetailPage = () => {
               <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2 bg-white">
                 <CommentOutlined className="text-indigo-500" />
                 <span className="text-slate-700 font-semibold text-sm">
-                  Izohlar
+                  Chatting
                 </span>
                 <span className="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-0.5 rounded-full">
                   {data.izohlar?.length || 0}
@@ -515,41 +510,6 @@ const TopshiriqDetailPage = () => {
                     {data.qolgan_kunlar > 0 ? "+" : ""}
                     {data.qolgan_kunlar} kun
                   </span>
-                </div>
-              </div>
-            </Card>
-
-            <Card
-              className="rounded-2xl border border-slate-200 shadow-sm"
-              bodyStyle={{ padding: "20px" }}
-            >
-              <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-3">
-                Meta
-              </p>
-              <div className="space-y-3 text-xs">
-                <div>
-                  <p className="text-slate-400 mb-0.5">ID</p>
-                  <p className="font-mono text-slate-700 font-semibold">
-                    #{data.id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 mb-0.5">Bayonnoma ID</p>
-                  <p className="font-mono text-slate-700 font-semibond">
-                    #{data.bayonnoma}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 mb-0.5">Yaratilgan</p>
-                  <p className="text-slate-700 font-medium">
-                    {new Date(data.created_at).toLocaleDateString("uz-UZ")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 mb-0.5">Yangilangan</p>
-                  <p className="text-slate-700 font-medium">
-                    {new Date(data.updated_at).toLocaleDateString("uz-UZ")}
-                  </p>
                 </div>
               </div>
             </Card>

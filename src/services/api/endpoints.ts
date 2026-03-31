@@ -10,11 +10,11 @@ export const API_ENDPOINTS = {
 
   // Users
   USERS: {
-    LIST: "auth/users/",
-    CREATE: "auth/users/",
-    DETAIL: (id: string | number) => `/users/${id}`,
-    UPDATE: (id: string | number) => `/users/${id}`,
-    DELETE: (id: string | number) => `/users/${id}`,
+    LIST: "/auth/users/",
+    CREATE: "/auth/users/",
+    DETAIL: (id: string | number) => `/users/${id}/`,
+    UPDATE: (id: string | number) => `/users/${id}/`,
+    DELETE: (id: string | number) => `/users/${id}/`,
     PROFILE: "/auth/profile/",
     CHANGE_PASSWORD: "/auth/password/change/",
   },

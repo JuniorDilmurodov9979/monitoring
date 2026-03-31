@@ -16,6 +16,7 @@ export const PERMISSIONS = {
     canUpdate: true,
     canDelete: true,
     canManageUsers: true,
+    rais: true,
   },
   rais_orinbosari: {
     canCreate: false,
@@ -27,12 +28,21 @@ export const PERMISSIONS = {
     canManageUsers: true,
     canSeeUsers: false,
   },
+  boshqarma_boshi: {
+    canCreate: true,
+    canRead: true,
+    canUpdate: true,
+    canDelete: true,
+    canManageUsers: true,
+  },
   pto: {
     canCreate: false,
     canRead: true,
     canUpdate: false,
     canDelete: false,
     canManageUsers: false,
+    canCreateTalab: true,
+    canSeeTalablar: true,
   },
   boshqarma: {
     canCreate: true,
@@ -40,6 +50,14 @@ export const PERMISSIONS = {
     canUpdate: false,
     canDelete: false,
     canManageUsers: false,
+  },
+  xodim: {
+    canCreate: false,
+    canRead: true,
+    canUpdate: false,
+    canDelete: false,
+    canManageUsers: false,
+    canCreateTalab: true,
   },
   viewer: {
     canCreate: false,

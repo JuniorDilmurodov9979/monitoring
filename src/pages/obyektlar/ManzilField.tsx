@@ -219,6 +219,7 @@ export default function ManzilField() {
     { region: string; district: string }[]
   >([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const form = Form.useFormInstance();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -236,6 +237,7 @@ export default function ManzilField() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
+    form.setFieldValue("manzil", val);
 
     if (val.trim().length === 0) {
       // Show all when empty and focused
@@ -272,11 +274,13 @@ export default function ManzilField() {
   const handleSelect = (region: string, district: string) => {
     const full = `${district}, ${region}`;
     setInputValue(full);
+    form.setFieldValue("manzil", full); // ← sync to Form
     setShowDropdown(false);
   };
 
   const handleClear = () => {
     setInputValue("");
+    form.setFieldValue("manzil", ""); // ← sync to Form
     setShowDropdown(false);
   };
 

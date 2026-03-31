@@ -847,7 +847,7 @@ const ProfilePage = () => {
                     </svg>
                   }
                   label="Oxirgi kirish"
-                  value={formatDateTime(user.last_login)}
+                  value={formatDate(user.last_login)}
                   isEmpty={!user.last_login}
                 />
 

@@ -353,13 +353,15 @@ const HujjatSinglePage = () => {
               onClick={async () => {
                 try {
                   const url = data.fayl!.replace("http://", "https://");
-                  const res = await fetch(url);
-                  const blob = await res.blob();
+                  const response = await fetch(url);
+                  const blob = await response.blob();
                   const blobUrl = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = blobUrl;
                   a.download = `${data.nomi}.${data.fayl_turi?.toLowerCase() || "file"}`;
+                  document.body.appendChild(a);
                   a.click();
+                  document.body.removeChild(a);
                   URL.revokeObjectURL(blobUrl);
                 } catch {
                   message.error("Yuklab olishda xatolik yuz berdi");

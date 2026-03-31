@@ -153,7 +153,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
                   Boshqarma
                 </span>
               }
-              rules={[{ required: true, message: "Boshqarmani tanlang" }]}
+              // rules={[{ required: true, message: "Boshqarmani tanlang" }]}
             >
               <Select
                 placeholder="Boshqarmani tanlang"
@@ -240,7 +240,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
               Telegram ID
             </span>
           }
-          rules={[{ required: true, message: "Telegram ID kiriting" }]}
+          // rules={[{ required: true, message: "Telegram ID kiriting" }]}
         >
           <Input
             prefix={<SendOutlined className="text-gray-400" />}

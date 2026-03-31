@@ -40,7 +40,13 @@ const navItems: {
   { label: "Hujjatlar", path: "/hujjatlar", icon: FileText },
   { label: "Bayonnomalar", path: "/bayonnomalar", icon: ClipboardList },
   { label: "Topshiriqlar", path: "/topshiriqlar", icon: CheckSquare },
-  { label: "Jarimalar", path: "/jarimalar", icon: Banknote },
+
+  // {
+  //   label: "Jarimalar",
+  //   path: "/jarimalar",
+  //   icon: Banknote,
+  //   permission: "canManageUsers",
+  // },
   { label: "Chat xonalar", path: "/chats", icon: MessageSquare },
   { label: "Talablar", path: "/talablar", icon: Pin },
   {

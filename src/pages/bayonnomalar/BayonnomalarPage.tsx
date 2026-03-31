@@ -179,7 +179,7 @@ const StatCard = ({
 
 const UserOptionLabel = ({ user }: { user: User }) => {
   const initials = user.fio
-    .split(" ")
+    ?.split(" ")
     .slice(0, 2)
     .map((w) => w[0])
     .join("");
@@ -310,13 +310,13 @@ const BaseFormFields = ({
                 ) : (
                   <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-[8px] font-bold text-indigo-600">
                     {u.fio
-                      .split(" ")
+                      ?.split(" ")
                       .slice(0, 2)
                       .map((w) => w[0])
                       .join("")}
                   </span>
                 )}
-                <span className="text-xs">{u.fio.split(" ")[0]}</span>
+                <span className="text-xs">{u.fio?.split(" ")[0]}</span>
               </span>
             ),
           }))}
@@ -690,7 +690,7 @@ const BayonnomalarPage = () => {
       fayl: "",
       ishtirokchilar: (record as any).ishtirokchilar
         ? (record as any).ishtirokchilar
-            .split(", ")
+            ?.split(", ")
             .map((s: string) => s.trim())
         : [],
       izoh: "",
@@ -816,16 +816,18 @@ const BayonnomalarPage = () => {
       sorter: true,
       render: (val: string) => {
         const initials = val
-          .split(" ")
+          ?.split(" ")
           .slice(0, 2)
           .map((w) => w[0])
           .join("");
         return (
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
-              {initials}
+              {initials ? initials : <UserOutlined />}
             </div>
-            <span className="text-sm text-slate-700 leading-tight">{val}</span>
+            <span className="text-sm text-slate-700 leading-tight">
+              {val ? val : "-"}
+            </span>
           </div>
         );
       },

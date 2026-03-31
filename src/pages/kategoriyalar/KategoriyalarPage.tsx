@@ -746,7 +746,7 @@ const KategoriyalarPage = () => {
                     setLoading(true);
                     fetchKategoriyalar().finally(() => setLoading(false));
                   }}
-                  className="text-indigo-500 border-indigo-200"
+                  className="text-indigo-500 border-indigo-200 py-1.5! h-full! rounded-lg!"
                 >
                   Qayta yuklash
                 </Button>

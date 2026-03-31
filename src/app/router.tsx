@@ -14,7 +14,6 @@ import HujjatlarPage from "@/pages/hujjatlar/HujjatlarPage";
 import HujjatSinglePage from "@/pages/hujjatlar/HujjatSinglePage";
 import BoshqarmaPage from "@/pages/boshqarma/BoshqarmaPage";
 import ObyektPage from "@/pages/obyektlar/ObyektPage";
-import ObyektSinglePage from "@/pages/obyektlar/ObyektSinglePage";
 import BayonnomalarPage from "@/pages/bayonnomalar/BayonnomalarPage";
 import TopshiriqlarPage from "@/pages/topshiriqlar/TopshiriqlarPage";
 import BayonnomaSinglePage from "@/pages/bayonnomalar/BayonnomaSinglePage";
@@ -31,6 +30,8 @@ import TalablarSinglePage from "@/pages/talablar/TalablarSinglePage";
 import KategoriyalarPage from "@/pages/kategoriyalar/KategoriyalarPage";
 import RoleGuard from "@/shared/components/guards/RoleGuard";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import ObyektEditPage from "@/pages/obyektlar/ObyektEditPage";
+import ObyektDetailPage from "@/pages/obyektlar/ObyektDetailPage";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
@@ -86,7 +87,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <RoleGuard action="canManageUsers" redirectTo="/unauthorized">
+          <RoleGuard action="canManageUsers" redirectTo="/boshqarma">
             <Suspense fallback={<PageLoader />}>
               <DashboardPage />
             </Suspense>
@@ -128,9 +129,11 @@ export const router = createBrowserRouter([
       {
         path: "boshqarma/:id",
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <BoshqarmaSinglePage />
-          </Suspense>
+          <RoleGuard action="canCreate" redirectTo="/unauthorized">
+            <Suspense fallback={<PageLoader />}>
+              <BoshqarmaSinglePage />
+            </Suspense>
+          </RoleGuard>
         ),
       },
       {
@@ -178,7 +181,16 @@ export const router = createBrowserRouter([
         path: "obyekt/:id",
         element: (
           <Suspense fallback={<PageLoader />}>
-            <ObyektSinglePage />
+            <ObyektDetailPage />
+          </Suspense>
+        ),
+      },
+
+      {
+        path: "obyekt/:id/edit",
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ObyektEditPage />
           </Suspense>
         ),
       },

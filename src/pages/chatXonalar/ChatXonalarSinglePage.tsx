@@ -12,8 +12,8 @@ import {
   Select,
   Form,
   message,
-  Popconfirm,
   Divider,
+  Upload,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -23,8 +23,9 @@ import {
   UserOutlined,
   SendOutlined,
   UserAddOutlined,
-  LogoutOutlined,
   MessageOutlined,
+  UploadOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -59,6 +60,21 @@ interface Xabar {
   matn: string;
   vaqt: string;
   o_qilgan: boolean;
+}
+
+interface Obyekt {
+  id: number;
+  nomi?: string;
+  name?: string;
+}
+
+interface User {
+  id: number;
+  username?: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -103,13 +119,18 @@ const getInitials = (fio: string) =>
     .join("")
     .toUpperCase();
 
-const formatTime = (vaqt: string) => {
-  const date = new Date(vaqt);
-  return date.toLocaleTimeString("uz-UZ", {
+const formatTime = (vaqt: string) =>
+  new Date(vaqt).toLocaleTimeString("uz-UZ", {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+const getUserLabel = (u: User) => {
+  const name = u.fio ?? [u.fio].filter(Boolean).join(" ") ?? u.username ?? `Foydalanuvchi ${u.id}`;
+  return name;
 };
+
+const getObyektLabel = (o: Obyekt) => o.nomi ?? o.name ?? String(o.id);
 
 // ─── IshtirokchiCard ──────────────────────────────────────────────────────────
 
@@ -228,7 +249,6 @@ const ChatXonaSinglePage = () => {
 
   // ── Messages state
   const [xabarlar, setXabarlar] = useState<Xabar[]>([]);
-
   const [xabarlarLoading, setXabarlarLoading] = useState(false);
   const [yangiXabar, setYangiXabar] = useState("");
   const [sending, setSending] = useState(false);
@@ -237,6 +257,16 @@ const ChatXonaSinglePage = () => {
   const [addModal, setAddModal] = useState(false);
   const [addForm] = Form.useForm();
   const [addLoading, setAddLoading] = useState(false);
+
+  // ── Add participant: dropdown data
+  const [obyektlar, setObyektlar] = useState<Obyekt[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [fetchingObyektlar, setFetchingObyektlar] = useState(false);
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+
+  // ── Add participant: file upload
+  const [rasmFile, setRasmFile] = useState<File | null>(null);
+  const [rasmPreview, setRasmPreview] = useState<string | null>(null);
 
   // ── Leave room
   const [leaveLoading, setLeaveLoading] = useState(false);
@@ -263,10 +293,42 @@ const ChatXonaSinglePage = () => {
 
   // ── Fetch messages when tab switches to xabarlar
   useEffect(() => {
-    if (activeTab === "xabarlar" && id) {
-      fetchXabarlar();
-    }
+    if (activeTab === "xabarlar" && id) fetchXabarlar();
   }, [activeTab, id]);
+
+  // ── Fetch obyektlar + users when modal opens
+  useEffect(() => {
+    if (!addModal) return;
+
+    const fetchObyektlar = async () => {
+      setFetchingObyektlar(true);
+      try {
+        const res = await api.get("/obyektlar/");
+        const d = res.data;
+        setObyektlar(Array.isArray(d) ? d : (d.results ?? []));
+      } catch {
+        messageApi.error("Obyektlarni yuklashda xatolik");
+      } finally {
+        setFetchingObyektlar(false);
+      }
+    };
+
+    const fetchUsers = async () => {
+      setFetchingUsers(true);
+      try {
+        const res = await api.get("/auth/users/");
+        const d = res.data;
+        setUsers(Array.isArray(d) ? d : (d.results ?? []));
+      } catch {
+        messageApi.error("Foydalanuvchilarni yuklashda xatolik");
+      } finally {
+        setFetchingUsers(false);
+      }
+    };
+
+    fetchObyektlar();
+    fetchUsers();
+  }, [addModal]);
 
   // ── Auto-scroll to latest message
   useEffect(() => {
@@ -301,10 +363,7 @@ const ChatXonaSinglePage = () => {
       const res = await api.post<Xabar>(`chat/xonalar/${id}/xabar_yuborish/`, {
         matn: yangiXabar.trim(),
       });
-      setXabarlar((prev) => [
-        ...(Array.isArray(prev) ? prev : []),
-        res.data as Xabar,
-      ]);
+      setXabarlar((prev) => [...(Array.isArray(prev) ? prev : []), res.data]);
       setYangiXabar("");
     } catch (err: any) {
       messageApi.error(
@@ -317,20 +376,21 @@ const ChatXonaSinglePage = () => {
 
   // ─── API: POST add participant ───────────────────────────────────────────────
 
-  const handleAddIshtirokchi = async (values: {
-    nomi: string;
-    turi: string;
-    obyekt?: number;
-    rasm?: string;
-  }) => {
+  const handleAddIshtirokchi = async (values: any) => {
     if (!id) return;
     setAddLoading(true);
     try {
-      await api.post(`chat/xonalar/${id}/ishtirokchi_qoshish/`, values);
+      const fd = new FormData();
+      Object.entries(values).forEach(([k, v]) => {
+        if (v != null) fd.append(k, v as any);
+      });
+      if (rasmFile) fd.set("rasm", rasmFile);
+
+      await api.post(`chat/xonalar/${id}/ishtirokchi_qoshish/`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       messageApi.success("Ishtirokchi muvaffaqiyatli qo'shildi");
-      setAddModal(false);
-      addForm.resetFields();
-      // Refresh room detail to update participants list
+      closeAddModal();
       const res = await api.get<XonaDetail>(`chat/xonalar/${id}/`);
       setData(res.data);
     } catch (err: any) {
@@ -358,6 +418,32 @@ const ChatXonaSinglePage = () => {
     } finally {
       setLeaveLoading(false);
     }
+  };
+
+  // ─── Modal helpers ───────────────────────────────────────────────────────────
+
+  const closeAddModal = () => {
+    setAddModal(false);
+    addForm.resetFields();
+    setRasmFile(null);
+    setRasmPreview(null);
+  };
+
+  const handleRasmChange = (info: any) => {
+    const file: File = info.file.originFileObj ?? info.file;
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      messageApi.error("Faqat rasm fayli yuklang!");
+      return;
+    }
+    if (file.size / 1024 / 1024 > 5) {
+      messageApi.error("Rasm 5MB dan kichik bo'lishi kerak!");
+      return;
+    }
+    setRasmFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setRasmPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
   };
 
   // ─── Computed ────────────────────────────────────────────────────────────────
@@ -426,7 +512,6 @@ const ChatXonaSinglePage = () => {
             )}
           </div>
 
-          {/* ── Action buttons ─────────────────────────────────────── */}
           {data && (
             <div className="flex items-center gap-1 flex-shrink-0">
               <Tooltip title="Ishtirokchi qo'shish">
@@ -438,24 +523,6 @@ const ChatXonaSinglePage = () => {
                   onClick={() => setAddModal(true)}
                 />
               </Tooltip>
-              {/* <Tooltip title="Xonani delete qilish">
-                <Popconfirm
-                  title="Xonadan chiqish"
-                  description="Haqiqatan ham bu xonadan chiqmoqchimisiz?"
-                  onConfirm={handleChiqish}
-                  okText="Ha, chiqish"
-                  cancelText="Bekor qilish"
-                  okButtonProps={{ danger: true, loading: leaveLoading }}
-                >
-                  <Button
-                    type="text"
-                    icon={<LogoutOutlined />}
-                    size="small"
-                    className="text-red-400"
-                    loading={leaveLoading}
-                  />
-                </Popconfirm>
-              </Tooltip> */}
             </div>
           )}
         </div>
@@ -558,7 +625,6 @@ const ChatXonaSinglePage = () => {
                 )}
               </div>
 
-              {/* ── Send message input ──────────────────────────────── */}
               <div className="px-3 py-2.5 border-t border-gray-200 bg-gray-50">
                 <div className="flex items-center gap-2">
                   <Input
@@ -636,12 +702,10 @@ const ChatXonaSinglePage = () => {
           </div>
         }
         open={addModal}
-        onCancel={() => {
-          setAddModal(false);
-          addForm.resetFields();
-        }}
+        onCancel={closeAddModal}
         footer={null}
         destroyOnClose
+        width={480}
       >
         <Divider className="mt-2 mb-4" />
         <Form
@@ -650,6 +714,7 @@ const ChatXonaSinglePage = () => {
           onFinish={handleAddIshtirokchi}
           requiredMark={false}
         >
+          {/* Nomi */}
           <Form.Item
             name="nomi"
             label="Nomi"
@@ -658,6 +723,7 @@ const ChatXonaSinglePage = () => {
             <Input placeholder="Ishtirokchi nomi" />
           </Form.Item>
 
+          {/* Turi */}
           <Form.Item
             name="turi"
             label="Turi"
@@ -670,26 +736,111 @@ const ChatXonaSinglePage = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item name="obyekt" label="Obyekt ID (ixtiyoriy)">
-            <Input type="number" placeholder="Obyekt ID" />
-          </Form.Item>
-          <Form.Item required name="foydalanuvchi_id" label="Foydalanuvchi ID">
-            <Input required type="number" placeholder="Foydalanuvchi ID" />
+          {/* Obyekt — searchable select */}
+          <Form.Item name="obyekt" label="Obyekt (ixtiyoriy)">
+            <Select
+              showSearch
+              allowClear
+              placeholder="Obyektni tanlang"
+              loading={fetchingObyektlar}
+              filterOption={(input, option) =>
+                String(option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              notFoundContent={
+                fetchingObyektlar ? (
+                  <Spin indicator={<LoadingOutlined spin />} size="small" />
+                ) : (
+                  "Topilmadi"
+                )
+              }
+              options={obyektlar.map((o) => ({
+                value: o.id,
+                label: getObyektLabel(o),
+              }))}
+            />
           </Form.Item>
 
-          <Form.Item name="rasm" label="Rasm URL (ixtiyoriy)">
-            <Input placeholder="https://..." />
+          {/* Foydalanuvchi — searchable select */}
+          <Form.Item
+            name="foydalanuvchi_id"
+            label="Foydalanuvchi"
+            rules={[{ required: true, message: "Foydalanuvchini tanlang" }]}
+          >
+            <Select
+              showSearch
+              placeholder="Foydalanuvchini tanlang"
+              loading={fetchingUsers}
+              filterOption={(input, option) =>
+                String(option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              notFoundContent={
+                fetchingUsers ? (
+                  <Spin indicator={<LoadingOutlined spin />} size="small" />
+                ) : (
+                  "Topilmadi"
+                )
+              }
+              optionRender={(option) => (
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    size="small"
+                    style={{ backgroundColor: "#1677ff", flexShrink: 0 }}
+                  >
+                    {String(option.label ?? "?")[0]?.toUpperCase()}
+                  </Avatar>
+                  <span>{option.label}</span>
+                </div>
+              )}
+              options={users.map((u) => ({
+                value: u.id,
+                label: getUserLabel(u),
+              }))}
+            />
+          </Form.Item>
+
+          {/* Rasm — file upload */}
+          <Form.Item name="rasm" label="Rasm (ixtiyoriy)">
+            <div className="flex items-center gap-3">
+              {rasmPreview && (
+                <Avatar
+                  src={rasmPreview}
+                  size={52}
+                  shape="square"
+                  className="rounded-lg border border-gray-200 flex-shrink-0"
+                />
+              )}
+              <Upload
+                accept="image/*"
+                showUploadList={false}
+                beforeUpload={() => false}
+                onChange={handleRasmChange}
+              >
+                <Button icon={<UploadOutlined />}>
+                  {rasmFile ? rasmFile.name : "Rasm yuklash"}
+                </Button>
+              </Upload>
+              {rasmFile && (
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  onClick={() => {
+                    setRasmFile(null);
+                    setRasmPreview(null);
+                  }}
+                >
+                  O'chirish
+                </Button>
+              )}
+            </div>
           </Form.Item>
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button
-              onClick={() => {
-                setAddModal(false);
-                addForm.resetFields();
-              }}
-            >
-              Bekor qilish
-            </Button>
+            <Button onClick={closeAddModal}>Bekor qilish</Button>
             <Button type="primary" htmlType="submit" loading={addLoading}>
               Qo'shish
             </Button>

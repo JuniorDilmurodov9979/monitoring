@@ -25,6 +25,7 @@ import type { UploadFile, UploadProps } from "antd";
 import dayjs from "dayjs";
 import api from "@/services/api/axios";
 import { LAVOZIM_OPTIONS } from "@/shared/components/const/constValues";
+import { usePermissions } from "@/features/auth/hooks/usePermissions";
 
 interface User {
   id: number;
@@ -90,6 +91,7 @@ const XodimlarSinglePage = () => {
   const [boshqarmalar, setBoshqarmalar] = useState<Boshqarma[]>([]);
   const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
   const [form] = Form.useForm();
+  const { role } = usePermissions();
 
   useEffect(() => {
     fetchUser();
@@ -393,22 +395,24 @@ const XodimlarSinglePage = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              label={<FormLabel>Boshqarma</FormLabel>}
-              name="boshqarma"
-              rules={[
-                { required: true, message: "Boshqarma tanlash majburiy" },
-              ]}
-            >
-              <Select
-                className="rounded-lg"
-                placeholder="Tanlang"
-                options={boshqarmalar.map((b) => ({
-                  label: b.nomi,
-                  value: b.id,
-                }))}
-              />
-            </Form.Item>
+            {role !== "rais" && (
+              <Form.Item
+                label={<FormLabel>Boshqarma</FormLabel>}
+                name="boshqarma"
+                rules={[
+                  { required: true, message: "Boshqarma tanlash majburiy" },
+                ]}
+              >
+                <Select
+                  className="rounded-lg"
+                  placeholder="Tanlang"
+                  options={boshqarmalar.map((b) => ({
+                    label: b.nomi,
+                    value: b.id,
+                  }))}
+                />
+              </Form.Item>
+            )}
 
             <Form.Item
               label={<FormLabel>Lavozim</FormLabel>}

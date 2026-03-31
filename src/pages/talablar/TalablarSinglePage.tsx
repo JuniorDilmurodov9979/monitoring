@@ -266,7 +266,7 @@ const TalablarSinglePage = () => {
   const cfg = statusConfig[data.status] ?? statusConfig.kutilmoqda;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/40 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/40 p-6 rounded-xl">
       {/* Top bar */}
       <div className="flex items-center gap-3 mb-6">
         <Button
@@ -313,10 +313,10 @@ const TalablarSinglePage = () => {
 
       {/* Title card */}
       <Card
-        className="border-0! shadow-md! mb-5 overflow-hidden"
+        className="border-0! shadow-md! mb-5 overflow-hidden p-5! pt-4!"
         bodyStyle={{ padding: 0 }}
       >
-        <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" />
+        {/* <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" /> */}
         <div className="">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-100 flex items-center justify-center flex-shrink-0">
@@ -324,9 +324,9 @@ const TalablarSinglePage = () => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-                  {data.kategoriya_nomi}
-                </span>
+                {/* <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
+                  {data.kategoriya_nomi ? data.kategoriya_nomi : "Belgilanmagan"}
+                </span> */}
               </div>
               <Title level={4} className="mb-1! text-slate-800! font-bold!">
                 {data.mavzu}
@@ -583,7 +583,9 @@ const TalablarSinglePage = () => {
               label="Kategoriya"
               value={
                 <span className="bg-violet-50 text-violet-600 border border-violet-100 px-2 py-0.5 rounded-md text-xs font-medium">
-                  {data.kategoriya_nomi}
+                  {data.kategoriya_nomi
+                    ? data.kategoriya_nomi
+                    : "Belgilanmagan"}
                 </span>
               }
             />

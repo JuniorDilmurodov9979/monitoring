@@ -186,7 +186,7 @@ const BayonnomaSinglePage = () => {
         />
 
         <div className="pl-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <Tag
@@ -244,7 +244,7 @@ const BayonnomaSinglePage = () => {
                   )}
                 />
               </div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold mt-1 text-slate-400 uppercase tracking-wider">
                 Bajarilish
               </span>
             </div>

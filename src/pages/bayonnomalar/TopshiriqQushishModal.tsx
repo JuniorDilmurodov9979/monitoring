@@ -37,7 +37,7 @@ interface TopshiriqQoshishPayload {
   mazmun: string;
   muddat: string;
   ijrochi_boshqarma?: number | null;
-  ijrochi_xodim?: string | null;
+  ijrochi_xodim?: number[] | null;
   band_raqami?: number | null;
   izoh?: string;
   natija?: string;
@@ -186,7 +186,9 @@ const TopshiriqQoshishModal = ({
         mazmun: values.mazmun,
         muddat: values.muddat ? dayjs(values.muddat).format("YYYY-MM-DD") : "",
         ijrochi_boshqarma: values.ijrochi_boshqarma ?? null,
-        ijrochi_xodim: values.ijrochi_xodim ?? null,
+        ijrochi_xodim: values.ijrochi_xodim?.length
+          ? values.ijrochi_xodim
+          : null,
         band_raqami: values.band_raqami ?? null,
         izoh: values.izoh ?? "",
         natija: values.natija ?? "",
@@ -416,6 +418,7 @@ const TopshiriqQoshishModal = ({
               rules={[{ required: true, message: "Ijrochi xodimni kiriting!" }]}
             >
               <Select
+                mode="multiple"
                 showSearch
                 allowClear
                 loading={xodimLoading}
@@ -429,8 +432,7 @@ const TopshiriqQoshishModal = ({
                   value: x.id,
                   label: x.fio,
                 }))}
-                className="rounded-xl! border-slate-200! hover:border-emerald-300! h-10! w-full!"
-                style={{ height: 40 }}
+                className="rounded-xl! border-slate-200! py-1.5! hover:border-emerald-300!‰ w-full!"
               />
             </Form.Item>
           </div>

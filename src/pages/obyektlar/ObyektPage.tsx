@@ -176,7 +176,7 @@ const ObyektPage = () => {
       try {
         setLoading(true);
         const params = buildQueryParams(f);
-        const response = await api.get(API_ENDPOINTS.OBYEKTLAR.LIST, {
+        const response = await api.get("/obyektlar/", {
           params,
         });
         setData(response.data.results);
@@ -242,10 +242,12 @@ const ObyektPage = () => {
         "boshlanish_sanasi",
         values.boshlanish_sanasi.format("YYYY-MM-DD"),
       );
-      formData.append(
-        "tugash_sanasi",
-        values.tugash_sanasi.format("YYYY-MM-DD"),
-      );
+      if (values.tugash_sanasi) {
+        formData.append(
+          "tugash_sanasi",
+          values.tugash_sanasi.format("YYYY-MM-DD"),
+        );
+      }
       formData.append("shartnoma_summasi", values.shartnoma_summasi.toString());
       formData.append("sarflangan_summa", values.sarflangan_summa.toString());
       formData.append("masul_xodim", values.masul_xodim);
@@ -380,7 +382,7 @@ const ObyektPage = () => {
                     "Holati",
                     "Bajarilish",
                     "Reja",
-                    "Tugash",
+                    "Tugash sanasi",
                     "Muammo",
                   ].map((col) => (
                     <th
@@ -431,9 +433,11 @@ const ObyektPage = () => {
                       <td className="px-4 py-3.5">
                         <MiniProgress value={row.reja_foizi} color="#a855f7" />
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span className="text-sm text-slate-600 tabular-nums">
-                          {dayjs(row.tugash_sanasi).format("DD.MM.YY")}
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="text-sm text-center text-slate-600 tabular-nums">
+                          {row.tugash_sanasi
+                            ? dayjs(row.tugash_sanasi).format("DD.MM.YY")
+                            : "-"}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
@@ -594,7 +598,7 @@ const ObyektPage = () => {
             <Form.Item
               label={<FormLabel>Tugash sanasi</FormLabel>}
               name="tugash_sanasi"
-              rules={[{ required: true, message: "Sanani tanlang" }]}
+              // rules={[{ required: true, message: "Sanani tanlang" }]}
             >
               <DatePicker className="w-full rounded-lg" format="DD.MM.YYYY" />
             </Form.Item>

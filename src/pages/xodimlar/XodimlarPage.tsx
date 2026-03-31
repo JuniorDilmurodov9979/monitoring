@@ -179,7 +179,7 @@ const XodimlarPage = () => {
                   {["F.I.O", "Lavozim", "Boshqarma", "Holati"].map((col) => (
                     <th
                       key={col}
-                      className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400"
+                      className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400"
                     >
                       {col}
                     </th>
@@ -217,7 +217,7 @@ const XodimlarPage = () => {
                     </td>
 
                     <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 capitalize">
+                      <span className="inline-flex items-center w-full px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 capitalize">
                         {user.lavozim.replace("_", " ")}
                       </span>
                     </td>
