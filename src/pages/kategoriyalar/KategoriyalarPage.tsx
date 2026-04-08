@@ -2,6 +2,7 @@
 
 import api from "@/services/api/axios";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Input,
@@ -22,6 +23,9 @@ import {
   ReloadOutlined,
   RightOutlined,
   EditOutlined,
+  PaperClipOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
@@ -54,6 +58,71 @@ interface Obyekt {
   id: number;
   nomi: string;
 }
+
+/** Response from `hujjatlar/kategoriya_hujjatlari/?kategoriya=` */
+interface KategoriyaHujjat {
+  id: number;
+  nomi: string;
+  obyekt: number;
+  obyekt_nomi: string;
+  kategoriya: number;
+  kategoriya_nomi: string;
+  kategoriya_full_path: string;
+  boshqarma: number | null;
+  boshqarma_nomi?: string | null;
+  yuklovchi: number;
+  yuklovchi_fio: string;
+  holat: "kutilmoqda" | "tasdiqlangan" | "rad_etilgan" | string;
+  holat_display: string;
+  korinish?: string;
+  korinish_display?: string;
+  muddat: string;
+  fayl_turi: string;
+  is_kechikkan: boolean;
+  yuklangan_vaqt: string;
+}
+
+const HUJJAT_HOLAT_STYLES: Record<string, { badge: string; dot: string }> = {
+  kutilmoqda: {
+    badge: "bg-amber-50 text-amber-600",
+    dot: "bg-amber-400",
+  },
+  tasdiqlangan: {
+    badge: "bg-emerald-50 text-emerald-600",
+    dot: "bg-emerald-400",
+  },
+  rad_etilgan: {
+    badge: "bg-rose-50 text-rose-500",
+    dot: "bg-rose-400",
+  },
+};
+
+const formatHujjatDate = (val: string) => {
+  if (!val) return "—";
+  const [y, m, d] = val.split("-");
+  return `${d}.${m}.${y}`;
+};
+
+const HujjatFileTypeBadge = ({ type }: { type: string }) => {
+  const colorMap: Record<string, string> = {
+    PDF: "bg-rose-50 text-rose-500 border-rose-100",
+    JPEG: "bg-blue-50 text-blue-500 border-blue-100",
+    JPG: "bg-blue-50 text-blue-500 border-blue-100",
+    PNG: "bg-violet-50 text-violet-500 border-violet-100",
+    DOCX: "bg-sky-50 text-sky-500 border-sky-100",
+    XLSX: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  };
+  const cls =
+    colorMap[type?.toUpperCase()] ??
+    "bg-slate-50 text-slate-400 border-slate-100";
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${cls}`}
+    >
+      {type}
+    </span>
+  );
+};
 
 // ─── Tree Row ─────────────────────────────────────────────────────────────────
 
@@ -308,7 +377,7 @@ function AddModal({
           />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label={
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Parent kategoriya
@@ -326,9 +395,9 @@ function AddModal({
               label: k.full_path || k.nomi,
             }))}
           />
-        </Form.Item>
+        </Form.Item> */}
 
-        <Form.Item
+        {/* <Form.Item
           label={
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Tartib raqami
@@ -337,7 +406,7 @@ function AddModal({
           name="tartib"
         >
           <Input type="number" />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item
           label={
@@ -576,12 +645,17 @@ function EditModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const KategoriyalarPage = () => {
+  const navigate = useNavigate();
   const [kategoriyalar, setKategoriyalar] = useState<Kategoriya[]>([]);
   const [boshqarmalar, setBoshqarmalar] = useState<Boshqarma[]>([]);
   const [obyektlar, setObyektlar] = useState<Obyekt[]>([]);
   const [selected, setSelected] = useState<Kategoriya | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Kategoriya | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [kategoriyaHujjatlar, setKategoriyaHujjatlar] = useState<
+    KategoriyaHujjat[]
+  >([]);
+  const [hujjatlarLoading, setHujjatlarLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
@@ -639,6 +713,33 @@ const KategoriyalarPage = () => {
       .then(({ data }: { data: Kategoriya }) => setSelectedDetail(data))
       .catch(() => setSelectedDetail(selected)) // fallback to tree data
       .finally(() => setDetailLoading(false));
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (!selected?.id) {
+      setKategoriyaHujjatlar([]);
+      return;
+    }
+    let cancelled = false;
+    setHujjatlarLoading(true);
+    api
+      .get(`hujjatlar/kategoriya_hujjatlari/`, {
+        params: { kategoriya: selected.id },
+      })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : (data?.results ?? []);
+        setKategoriyaHujjatlar(list);
+      })
+      .catch(() => {
+        if (!cancelled) setKategoriyaHujjatlar([]);
+      })
+      .finally(() => {
+        if (!cancelled) setHujjatlarLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selected?.id]);
 
   const filtered = search.trim()
@@ -836,8 +937,118 @@ const KategoriyalarPage = () => {
                   </div>
                 )}
 
+                {/* Hujjatlar (API: kategoriya_hujjatlari) */}
+                <div className="bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                    <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Shu kategoriyadagi hujjatlar
+                    </Text>
+                    {!hujjatlarLoading && (
+                      <span className="text-[11px] text-slate-400 tabular-nums">
+                        {kategoriyaHujjatlar.length}
+                      </span>
+                    )}
+                  </div>
+                  {hujjatlarLoading ? (
+                    <div className="flex justify-center py-10">
+                      <Spin />
+                    </div>
+                  ) : kategoriyaHujjatlar.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-slate-300 gap-2">
+                      <PaperClipOutlined className="text-2xl" />
+                      <Text className="text-sm text-slate-400">
+                        Hujjatlar mavjud emas
+                      </Text>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50/80 border-b border-slate-100">
+                            {[
+                              "Nomi",
+                              "Obyekt",
+                              "Yuklovchi",
+                              "Muddat",
+                              "Holat",
+                            ].map((h) => (
+                              <th
+                                key={h}
+                                className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap"
+                              >
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {kategoriyaHujjatlar.map((h, i) => {
+                            const holatCfg =
+                              HUJJAT_HOLAT_STYLES[h.holat] ??
+                              HUJJAT_HOLAT_STYLES.kutilmoqda;
+                            return (
+                              <tr
+                                key={h.id}
+                                onClick={() => navigate(`/hujjatlar/${h.id}`)}
+                                className={`border-t border-slate-100 hover:bg-slate-50/80 cursor-pointer transition-colors ${
+                                  i === 0 ? "border-t-0" : ""
+                                }`}
+                              >
+                                <td className="px-4 py-3 align-top max-w-[240px]">
+                                  <div className="flex items-center gap-2">
+                                    <HujjatFileTypeBadge type={h.fayl_turi} />
+                                    <span className="font-medium text-slate-700 text-[13px] line-clamp-2">
+                                      {h.nomi}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 align-top text-slate-500 text-[13px] max-w-[200px]">
+                                  <span className="line-clamp-2">
+                                    {h.obyekt_nomi || "—"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 align-top text-slate-500 text-[13px] whitespace-nowrap">
+                                  {h.yuklovchi_fio || "—"}
+                                </td>
+                                <td className="px-4 py-3 align-top whitespace-nowrap">
+                                  <div className="flex items-center gap-1.5">
+                                    {h.is_kechikkan ? (
+                                      <WarningOutlined className="text-rose-400 text-xs" />
+                                    ) : (
+                                      <ClockCircleOutlined className="text-slate-300 text-xs" />
+                                    )}
+                                    <span
+                                      className={`text-[13px] font-medium tabular-nums ${
+                                        h.is_kechikkan
+                                          ? "text-rose-500"
+                                          : "text-slate-600"
+                                      }`}
+                                    >
+                                      {formatHujjatDate(h.muddat)}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 align-top">
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold ${holatCfg.badge}`}
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${holatCfg.dot}`}
+                                    />
+                                    {h.holat_display}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
                 {/* Children */}
-                {(selectedDetail.children?.length ?? 0) > 0 && (
+                {/* {(selectedDetail.children?.length ?? 0) > 0 && (
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3">
                       Bolalar kategoriyalar ({selectedDetail.children.length})
@@ -861,7 +1072,7 @@ const KategoriyalarPage = () => {
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             ) : null
           ) : (

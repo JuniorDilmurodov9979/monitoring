@@ -218,7 +218,7 @@ export const TopshiriqCard = ({
               Ijrochi xodim
             </p>
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-600">
                 {getInitials(t.ijrochi_xodim_fio)}
               </div>
               <span className="text-slate-700 font-medium">

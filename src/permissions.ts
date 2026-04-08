@@ -10,6 +10,14 @@ export const ROLES = {
 };
 
 export const PERMISSIONS = {
+  superadmin: {
+    canCreate: true,
+    canRead: true,
+    canUpdate: true,
+    canDelete: true,
+    canManageUsers: true,
+    canSeeUsers: true,
+  },
   rais: {
     canCreate: true,
     canRead: true,

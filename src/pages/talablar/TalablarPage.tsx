@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   Table,
   Tag,
@@ -167,6 +167,35 @@ const formatDate = (dateStr: string) =>
     month: "2-digit",
     year: "numeric",
   });
+
+const topshiriqHolatUi: Record<string, { icon: ReactNode; pillClass: string }> =
+{
+  yangi: {
+    icon: <FileTextOutlined />,
+    pillClass:
+      "bg-gradient-to-br from-violet-50 to-purple-50 text-violet-800 border-violet-200",
+  },
+  kechikkan: {
+    icon: <ExclamationCircleOutlined />,
+    pillClass:
+      "bg-gradient-to-br from-rose-50 to-rose-100 text-rose-700 border-rose-200",
+  },
+  jarayonda: {
+    icon: <ClockCircleOutlined />,
+    pillClass:
+      "bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-blue-200",
+  },
+  bajarildi: {
+    icon: <CheckCircleOutlined />,
+    pillClass:
+      "bg-gradient-to-br from-green-50 to-green-100 text-green-700 border-green-200",
+  },
+  rad_etildi: {
+    icon: <CloseOutlined />,
+    pillClass:
+      "bg-gradient-to-br from-red-50 to-red-100 text-red-700 border-red-200",
+  },
+};
 
 // ── Reusable TalabTable ────────────────────────────────────────────────────────
 
@@ -422,7 +451,7 @@ const TalabTable = ({
 
       {/* Filters */}
       <Card
-        className="!border-slate-200 !shadow-sm mb-4"
+        className="!border-slate-200 !shadow-sm !mb-4"
         bodyStyle={{ padding: "12px 16px" }}
       >
         <div className="flex flex-wrap gap-3 items-center">
@@ -569,26 +598,32 @@ const Talablar = () => {
     if (!modalOpen) return;
     if (boshqarmalar.length > 0 && kategoriyalar.length > 0) return;
 
-    setFormDataLoading(true);
-    Promise.all([
-      fetchAllPages<Boshqarma>("core/boshqarmalar/"),
-      fetchAllPages<Kategoriya>("hujjatlar/kategoriyalar/"),
-    ])
-      .then(([boshs, kats]) => {
+    const loadFormData = async () => {
+      setFormDataLoading(true);
+      try {
+        const boshs = await fetchAllPages<Boshqarma>("core/boshqarmalar/");
         setBoshqarmalar(boshs);
-        setKategoriyalar(kats);
-      })
-      .catch(() =>
+
+        const kats = await api.get<Kategoriya>(
+          "hujjatlar/kategoriyalar/boshqarma_kategoriyalari/",
+        );
+        setKategoriyalar(kats?.data);
+
+      } catch {
         notifApi.error({
           message: "Ma'lumot yuklashda xatolik",
           description: "Bo'limlar yoki kategoriyalarni yuklab bo'lmadi.",
           placement: "topRight",
-        }),
-      )
-      .finally(() => setFormDataLoading(false));
+        });
+      } finally {
+        setFormDataLoading(false);
+      }
+    };
+
+    void loadFormData();
   }, [modalOpen]);
 
-  /** Sync updated record across all three lists */
+  /** Sync updated record across talab lists (menga kelgan = topshiriqlar, alohida API) */
   const handleUpdateRecord = (updated: Talab) => {
     const patch = (list: Talab[]) =>
       list.map((t) => (t.id === updated.id ? updated : t));
@@ -669,7 +704,7 @@ const Talablar = () => {
       label: (
         <span className="flex items-center gap-1.5">
           <SendOutlined />
-          Yuborgan
+          Yuborilgan
           <Badge
             count={yuborgan.length}
             showZero
@@ -688,7 +723,7 @@ const Talablar = () => {
       label: (
         <span className="flex items-center gap-1.5">
           <InboxOutlined />
-          Kelgan
+          Kelib tushgan
           <Badge
             count={kelgan.length}
             showZero
@@ -877,7 +912,7 @@ const Talablar = () => {
               Talablar
             </Title>
             <Text className="text-gray-400 text-sm">
-              Barcha so'rovlar va talablar ro'yxati
+              Barcha talablar ro'yxati
             </Text>
           </div>
           <Space>

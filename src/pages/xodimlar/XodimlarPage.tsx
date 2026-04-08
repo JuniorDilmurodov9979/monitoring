@@ -10,6 +10,12 @@ import { useNavigate } from "react-router-dom";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
 import AddUserModal from "./AddUserModal";
+import { LAVOZIM_OPTIONS } from "@/shared/components/const/constValues";
+
+const LAVOZIM_FILTER_OPTIONS = [
+  { label: "Lavozimni tanlang", value: "" },
+  ...LAVOZIM_OPTIONS,
+];
 
 interface User {
   id: number;
@@ -26,19 +32,6 @@ interface PaginatedResponse {
   previous: string | null;
   results: User[];
 }
-
-const LAVOZIM_OPTIONS = [
-  { value: "", label: "Barcha lavozimlar" },
-  { value: "rais", label: "Boshqaruv Raisi" },
-  { value: "rais_orinbosari", label: "Rais O'rinbosari" },
-  { value: "boshqarma_boshi", label: "Boshqarma Boshlig'i" },
-  { value: "pto", label: "PTO xodimi" },
-  { value: "iqtisod", label: "Iqtisodchi" },
-  { value: "buxgalter", label: "Buxgalter" },
-  { value: "kadr", label: "Kadrlar xodimi" },
-  { value: "uchastka_rahbari", label: "Uchastka rahbari" },
-  { value: "xodim", label: "Oddiy xodim" },
-];
 
 const PAGE_SIZE = 10;
 
@@ -133,9 +126,9 @@ const XodimlarPage = () => {
         </div>
 
         <Select
-          value={lavozim ?? ""}
+          value={lavozim}
           onChange={(value) => handleLavozimChange(value ?? "")}
-          options={LAVOZIM_OPTIONS}
+          options={LAVOZIM_FILTER_OPTIONS}
           className="min-w-[220px] py-1.5! rounded-xl!"
           size="middle"
         />

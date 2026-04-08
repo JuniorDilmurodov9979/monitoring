@@ -552,7 +552,7 @@ const TalablarSinglePage = () => {
                   onClick={handleIzohSubmit}
                   loading={submitting}
                   disabled={!izohMatn.trim()}
-                  size="small"
+                  size="middle"
                   className="rounded-lg! font-medium! flex-shrink-0"
                   style={{
                     background: izohMatn.trim() ? "#3b82f6" : undefined,

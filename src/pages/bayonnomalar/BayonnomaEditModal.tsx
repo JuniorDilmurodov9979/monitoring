@@ -116,7 +116,7 @@ const BayonnomaEditModal = ({
       formData.append("raqami", values.raqami);
       formData.append(
         "sana",
-        values.sana ? dayjs(values.sana).format("YYYY-MM-DD") : ""
+        values.sana ? dayjs(values.sana).format("YYYY-MM-DD") : "",
       );
       formData.append("mavzu", values.mavzu);
       formData.append("ishtirokchilar", values.ishtirokchilar ?? "");
@@ -130,7 +130,7 @@ const BayonnomaEditModal = ({
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
-        }
+        },
       );
 
       message.success("Bayonnoma muvaffaqiyatli yangilandi");
@@ -188,9 +188,9 @@ const BayonnomaEditModal = ({
           </div>
           <button
             onClick={handleCancel}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/75 hover:bg-white/95 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/75 hover:bg-white/95 transition-colors cursor-pointer"
           >
-            <CloseOutlined color="" className="text-white text-sm" />
+            <CloseOutlined className="text-white text-sm" />
           </button>
         </div>
       </div>
@@ -277,14 +277,16 @@ const BayonnomaEditModal = ({
             className="mb-4!"
           >
             <TextArea
-              rows={2}
+              rows={5}
               placeholder="Qo'shimcha izoh..."
               className="rounded-xl! border-slate-200! hover:border-indigo-300! focus:border-indigo-500! resize-none!"
             />
           </Form.Item>
 
           <Form.Item
-            label={<FieldLabel icon={<UploadOutlined />} label="Fayl yuklash" />}
+            label={
+              <FieldLabel icon={<UploadOutlined />} label="Fayl yuklash" />
+            }
             className="mb-4!"
           >
             <Upload

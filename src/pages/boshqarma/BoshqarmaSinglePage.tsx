@@ -22,6 +22,7 @@ interface UserType {
   lavozim: string;
   boshqarma_nomi: string;
   is_active: boolean;
+  avatar?: string | null;
 }
 
 interface HujjatType {
@@ -58,6 +59,7 @@ interface BoshqarmaUpdatePayload {
 }
 
 type TabKey = "xodimlar" | "hujjatlar";
+type HujjatCategoryKey = "all" | string;
 
 const HOLAT_CONFIG: Record<
   string,
@@ -131,6 +133,8 @@ const BoshqarmaSinglePage = () => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabKey>("xodimlar");
+  const [activeHujjatCategory, setActiveHujjatCategory] =
+    useState<HujjatCategoryKey>("all");
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -249,6 +253,27 @@ const BoshqarmaSinglePage = () => {
   }, [id]);
 
   const isLoading = activeTab === "xodimlar" ? usersLoading : hujjatlarLoading;
+
+  const hujjatCategories: string[] = Array.from(
+    new Set(
+      hujjatlar
+        .map((d: HujjatType) => d.kategoriya_nomi)
+        .filter((v: string) => Boolean(v?.trim())),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "uz"));
+
+  const filteredHujjatlar =
+    activeHujjatCategory === "all"
+      ? hujjatlar
+      : hujjatlar.filter((d) => d.kategoriya_nomi === activeHujjatCategory);
+
+  // keep active category valid when data changes / tab changes
+  useEffect(() => {
+    if (activeTab !== "hujjatlar") return;
+    if (activeHujjatCategory === "all") return;
+    if (hujjatCategories.includes(activeHujjatCategory)) return;
+    setActiveHujjatCategory("all");
+  }, [activeTab, activeHujjatCategory, hujjatCategories]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", {
@@ -455,96 +480,158 @@ const BoshqarmaSinglePage = () => {
           text="Bu boshqarmada hujjatlar yo'q"
         />
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                {[
-                  "#",
-                  "Nomi",
-                  "Obyekt",
-                  "Kategoriya",
-                  "Fayl turi",
-                  "Muddat",
-                  "Holati",
-                ].map((col) => (
-                  <th
-                    key={col}
-                    className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400"
+        <div className="space-y-3">
+          {/* category menu */}
+          <div className="flex flex-wrap gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
+            <button
+              onClick={() => setActiveHujjatCategory("all")}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                activeHujjatCategory === "all"
+                  ? "bg-slate-800 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              Hammasi
+              <span
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                  activeHujjatCategory === "all"
+                    ? "bg-white/15 text-white"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {hujjatlar.length}
+              </span>
+            </button>
+
+            {hujjatCategories.map((cat) => {
+              const count = hujjatlar.filter((d) => d.kategoriya_nomi === cat)
+                .length;
+              const isActive = activeHujjatCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveHujjatCategory(cat)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                    isActive
+                      ? "bg-slate-800 text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  {cat}
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                      isActive
+                        ? "bg-white/15 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
                   >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {hujjatlar.map((doc) => {
-                const holat = getHolatConfig(doc.holat);
-                return (
-                  <tr
-                    key={doc.id}
-                    className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors duration-100 cursor-pointer"
-                    onClick={() => navigate(`/hujjatlar/${doc.id}`)}
-                  >
-                    <td className="px-4 py-3.5">
-                      <span className="text-xs font-medium text-slate-400 tabular-nums">
-                        {doc.id}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 max-w-[220px]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                          <FileOutlined className="text-slate-400 text-xs" />
-                        </div>
-                        <button className="text-sm text-start cursor-pointer hover:underline hover:text-slate-900 font-semibold text-slate-700 line-clamp-2">
-                          {doc.nomi}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 max-w-[160px]">
-                      <span className="text-sm text-slate-600 line-clamp-2">
-                        {doc.obyekt_nomi}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-600">
-                        {doc.kategoriya_nomi}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 font-mono">
-                        {doc.fayl_turi}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5">
-                        {doc.is_kechikkan && (
-                          <ClockCircleOutlined className="text-red-400 text-xs" />
-                        )}
-                        <span
-                          className={`text-xs font-medium tabular-nums ${
-                            doc.is_kechikkan ? "text-red-500" : "text-slate-500"
-                          }`}
-                        >
-                          {formatDate(doc.muddat)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${holat.bg} ${holat.text}`}
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {filteredHujjatlar.length === 0 ? (
+            <EmptyState
+              icon={<FileDoneOutlined />}
+              text="Ushbu kategoriyada hujjatlar topilmadi"
+            />
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    {[
+                      "#",
+                      "Nomi",
+                      "Obyekt",
+                      "Kategoriya",
+                      "Fayl turi",
+                      "Muddat",
+                      "Holati",
+                    ].map((col) => (
+                      <th
+                        key={col}
+                        className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400"
                       >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${holat.dot}`}
-                        />
-                        {doc.holat_display}
-                      </span>
-                    </td>
+                        {col}
+                      </th>
+                    ))}
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {filteredHujjatlar.map((doc) => {
+                    const holat = getHolatConfig(doc.holat);
+                    return (
+                      <tr
+                        key={doc.id}
+                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors duration-100 cursor-pointer"
+                        onClick={() => navigate(`/hujjatlar/${doc.id}`)}
+                      >
+                        <td className="px-4 py-3.5">
+                          <span className="text-xs font-medium text-slate-400 tabular-nums">
+                            {doc.id}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 max-w-[220px]">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                              <FileOutlined className="text-slate-400 text-xs" />
+                            </div>
+                            <button className="text-sm text-start cursor-pointer hover:underline hover:text-slate-900 font-semibold text-slate-700 line-clamp-2">
+                              {doc.nomi}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 max-w-[160px]">
+                          <span className="text-sm text-slate-600 line-clamp-2">
+                            {doc.obyekt_nomi}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-600">
+                            {doc.kategoriya_nomi}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 font-mono">
+                            {doc.fayl_turi}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            {doc.is_kechikkan && (
+                              <ClockCircleOutlined className="text-red-400 text-xs" />
+                            )}
+                            <span
+                              className={`text-xs font-medium tabular-nums ${
+                                doc.is_kechikkan
+                                  ? "text-red-500"
+                                  : "text-slate-500"
+                              }`}
+                            >
+                              {formatDate(doc.muddat)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${holat.bg} ${holat.text}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${holat.dot}`}
+                            />
+                            {doc.holat_display}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

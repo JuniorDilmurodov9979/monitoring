@@ -1,13 +1,41 @@
 export const LAVOZIM_OPTIONS = [
-  { label: "Boshqaruv raisi", value: "rais" },
-  { label: "Rais O'rinbosari", value: "rais_orinbosari" },
+  { label: "Boshqaruv Raisi", value: "rais" },
+  { label: "Boshqaruv rais o'rinbosari", value: "rais_orinbosari" },
   { label: "Boshqarma Boshlig'i", value: "boshqarma_boshi" },
+  {
+    label: "Boshqarma boshlig'i o'rinbosari",
+    value: "boshqarma_boshligi_orinbosari",
+  },
+  { label: "Yetakchi muhandis", value: "yetakchi_muhandis" },
+  { label: "Muhandis", value: "muhandis" },
   { label: "Uchastka Rahbari", value: "uchastka_rahbari" },
-  { label: "PTO", value: "pto" },
+  { label: "PTO Xodimi", value: "pto" },
   { label: "Buxgalter", value: "buxgalter" },
   { label: "Iqtisodchi", value: "iqtisod" },
   { label: "Kadrlar Xodimi", value: "kadr" },
   { label: "Oddiy Xodim", value: "xodim" },
+];
+
+/** Boshqaruv raisi / o'rinbosari — boshqarma tanlanganda alohida "Rahbariyat" selectida */
+export const LAVOZIM_RAHBARIYAT_OPTIONS = LAVOZIM_OPTIONS.filter(
+  (o) => o.value === "rais" || o.value === "rais_orinbosari"
+);
+
+/** Boshqarma tanlanganda asosiy "Lavozim" selecti (rahbariyat alohida) */
+export const LAVOZIM_STAFF_OPTIONS = LAVOZIM_OPTIONS.filter(
+  (o) => o.value !== "rais" && o.value !== "rais_orinbosari"
+);
+export const LAVOZIM_RAIS = [
+  { label: "Boshqaruv Raisi", value: "rais" },
+  { label: "Boshqaruv raisi o'rinbosari", value: "rais_orinbosari" },
+  {
+    label: "Boshqarma Boshlig'i",
+    value: "boshqarma_boshi",
+  },
+  {
+    label: "Boshqarma boshlig'i o'rinbosari",
+    value: "boshqarma_boshligi_orinbosari",
+  },
 ];
 export const UZBEKISTAN_LOCATIONS = {
   "Toshkent shahri": [

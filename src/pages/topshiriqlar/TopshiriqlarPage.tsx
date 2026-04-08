@@ -29,12 +29,26 @@ const TopshiriqlarPage = () => {
   const [searchText, setSearchText] = useState("");
   const [filterHolat, setFilterHolat] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [ordering, setOrdering] = useState("-id");
 
-  const getAllTopshiriqlar = async (page = 1) => {
+  const getAllTopshiriqlar = async () => {
     try {
       setLoading(true);
+      const params: Record<string, string | number> = {
+        page: currentPage,
+        ordering,
+      };
+
+      if (searchText.trim()) {
+        params.search = searchText.trim();
+      }
+
+      if (filterHolat !== "all") {
+        params.holat = filterHolat;
+      }
+
       const res = await api.get(API_ENDPOINTS.TOPSHIRIQLAR.LIST, {
-        params: { page },
+        params,
       });
       setData(res.data.results);
       setTotal(res.data.count);
@@ -46,44 +60,31 @@ const TopshiriqlarPage = () => {
   };
 
   useEffect(() => {
-    getAllTopshiriqlar(currentPage);
-  }, [currentPage]);
+    getAllTopshiriqlar();
+  }, [currentPage, searchText, filterHolat, ordering]);
 
-  const filtered = data.filter((row) => {
-    const matchSearch =
-      row.bayonnoma_raqami.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.mazmun.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.ijrochi_boshqarma_qisqa_nomi
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-    const matchHolat = filterHolat === "all" || row.holat === filterHolat;
-    return matchSearch && matchHolat;
-  });
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText, filterHolat, ordering]);
 
   const stats = {
-    kechikkan: data.filter((d) => d.holat === "kechikkan").length,
-    jarayonda: data.filter((d) => d.holat === "jarayonda").length,
-    bajarildi: data.filter((d) => d.holat === "bajarildi").length,
+    kechikkan: data.filter((d) => d.holat_ui === "kechikkan").length,
+    jarayonda: data.filter((d) => d.holat_ui === "jarayonda").length,
+    bajarildi: data.filter((d) => d.holat_ui === "bajarildi").length,
+    tasdiqlashda: data.filter((d) => d.holat_ui === "tasdiqlashda").length,
   };
+
+  console.log(data);
 
   const statCards = [
     {
-      label: "Jami",
+      label: "Jami topshiriqlar",
       value: total,
       colorClass: "text-slate-800",
       bgClass: "bg-gradient-to-br from-slate-50 to-slate-100",
       borderClass: "border-slate-200",
       accentClass: "text-slate-500",
       dotClass: "bg-slate-400",
-    },
-    {
-      label: "Kechikkan",
-      value: stats.kechikkan,
-      colorClass: "text-rose-700",
-      bgClass: "bg-gradient-to-br from-rose-50 to-rose-100",
-      borderClass: "border-rose-200",
-      accentClass: "text-rose-500",
-      dotClass: "bg-rose-400",
     },
     {
       label: "Jarayonda",
@@ -95,7 +96,16 @@ const TopshiriqlarPage = () => {
       dotClass: "bg-blue-400",
     },
     {
-      label: "Bajarildi",
+      label: "Tasdiqlashda",
+      value: stats.tasdiqlashda,
+      colorClass: "text-yellow-700",
+      bgClass: "bg-gradient-to-br from-yellow-50 to-yellow-100",
+      borderClass: "border-yellow-200",
+      accentClass: "text-yellow-500",
+      dotClass: "bg-yellow-400",
+    },
+    {
+      label: "Bajarilgan",
       value: stats.bajarildi,
       colorClass: "text-green-700",
       bgClass: "bg-gradient-to-br from-green-50 to-green-100",
@@ -103,11 +113,20 @@ const TopshiriqlarPage = () => {
       accentClass: "text-green-500",
       dotClass: "bg-green-400",
     },
+    {
+      label: "Kechikkan",
+      value: stats.kechikkan,
+      colorClass: "text-rose-700",
+      bgClass: "bg-gradient-to-br from-rose-50 to-rose-100",
+      borderClass: "border-rose-200",
+      accentClass: "text-rose-500",
+      dotClass: "bg-rose-400",
+    },
   ];
 
   const columns = [
     {
-      title: "Bayonnoma №",
+      title: "Bayonnoma raqami",
       dataIndex: "bayonnoma_raqami",
       key: "bayonnoma_raqami",
       width: 150,
@@ -118,10 +137,10 @@ const TopshiriqlarPage = () => {
       ),
     },
     {
-      title: "Boshqarma",
+      title: "Mas'ul shaxs",
       dataIndex: "ijrochi_boshqarma_qisqa_nomi",
       key: "ijrochi_boshqarma_qisqa_nomi",
-      width: 120,
+      width: 150,
       render: (val) => (
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-300/50 tracking-wide">
           {val}
@@ -129,7 +148,7 @@ const TopshiriqlarPage = () => {
       ),
     },
     {
-      title: "Band №",
+      title: "Band raqami",
       dataIndex: "band_raqami",
       key: "band_raqami",
       width: 90,
@@ -141,12 +160,12 @@ const TopshiriqlarPage = () => {
       ),
     },
     {
-      title: "Mazmun",
+      title: "Qisqacha mazmuni",
       dataIndex: "mazmun",
       key: "mazmun",
       render: (val) => (
         <span className="text-slate-700 text-sm leading-relaxed font-normal">
-          {val}
+          {val?.length > 70 ? val.slice(0, 70) + "..." : val}
         </span>
       ),
     },
@@ -163,10 +182,10 @@ const TopshiriqlarPage = () => {
       ),
     },
     {
-      title: "Holat",
+      title: "Holati",
       dataIndex: "holat",
       key: "holat",
-      width: 140,
+      width: 100,
       render: (val, row) => {
         const cfg = statusConfig[val] || statusConfig.jarayonda;
         const styleMap = {
@@ -198,7 +217,7 @@ const TopshiriqlarPage = () => {
           return (
             <span className="inline-flex items-center gap-1 text-green-600 font-semibold text-xs">
               <CheckCircleOutlined />
-              Tugallandi
+              Bajarildi
             </span>
           );
         if (val < 0)
@@ -211,7 +230,7 @@ const TopshiriqlarPage = () => {
           );
         return (
           <span className="inline-block text-blue-600 font-bold text-sm bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 px-2.5 py-0.5 rounded-lg">
-            +{val} kun
+            {val} kun
           </span>
         );
       },
@@ -232,7 +251,7 @@ const TopshiriqlarPage = () => {
                 Topshiriqlar
               </h1>
               <p className="m-0 text-xs text-slate-400 font-medium tracking-wide">
-                Bayonnomalar bo'yicha topshiriqlar ro'yxati
+                Bayonnomalar bo'yicha topshiriqlar statistikasi
               </p>
             </div>
           </div>
@@ -241,7 +260,7 @@ const TopshiriqlarPage = () => {
 
       <div className="mx-auto px-7 py-6 flex flex-col gap-5">
         {/* Stat Cards */}
-        <div className="grid grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-5 gap-3.5">
           {statCards.map((s) => (
             <div
               key={s.label}
@@ -280,12 +299,22 @@ const TopshiriqlarPage = () => {
             onChange={setFilterHolat}
             className="min-w-[170px]"
             suffixIcon={<FilterOutlined className="text-slate-500" />}
-            styles={{ popup: { borderRadius: 12 } }}
           >
             <Option value="all">Barcha holatlar</Option>
             <Option value="kechikkan">Kechikkan</Option>
             <Option value="jarayonda">Jarayonda</Option>
             <Option value="bajarildi">Bajarildi</Option>
+          </Select>
+          <Select
+            value={ordering}
+            onChange={setOrdering}
+            className="min-w-[190px]"
+            suffixIcon={<FilterOutlined className="text-slate-500" />}
+          >
+            <Option value="-id">Yangi topshiriqlar</Option>
+            <Option value="id">Eski topshiriqlar</Option>
+            <Option value="muddat">Muddat (yaqin)</Option>
+            <Option value="-muddat">Muddat (uzoq)</Option>
           </Select>
         </div>
 

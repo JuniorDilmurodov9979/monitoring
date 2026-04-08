@@ -53,14 +53,14 @@ export default function UnauthorizedPage() {
         <div className="flex gap-3 w-full">
           <Button
             onClick={() => navigate(-1)}
-            className="flex-1 !h-10 !rounded-lg !bg-gray-50 !border-gray-200 !text-gray-600 hover:!bg-gray-100 hover:!text-gray-800 hover:!border-gray-300 transition-all"
+            className="flex-1 h-10! rounded-lg! bg-gray-50! border-gray-200! text-gray-600! hover:bg-gray-100! hover:text-gray-800! hover:border-gray-300! transition-all"
           >
             Orqaga
           </Button>
           <Button
             type="primary"
             onClick={() => navigate("/")}
-            className="flex-1 !h-10 !rounded-lg !bg-indigo-600 hover:!bg-indigo-500 !border-0 !text-white font-medium transition-all"
+            className="flex-1 h-10! rounded-lg! bg-indigo-600! hover:bg-indigo-500! border-0! text-white! font-medium transition-all"
           >
             Bosh sahifa
           </Button>

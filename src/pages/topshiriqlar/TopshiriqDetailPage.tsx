@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Tag, Badge, Button, Spin, Divider, Empty } from "antd";
+import { Card, Tag, Badge, Button, Spin, Divider, Empty, message } from "antd";
 import {
   ArrowLeftOutlined,
   ClockCircleOutlined,
@@ -12,7 +12,14 @@ import {
   FileTextOutlined,
   CommentOutlined,
   InfoCircleOutlined,
-  SendOutlined,
+  PaperClipOutlined,
+  UploadOutlined,
+  DeleteOutlined,
+  FilePdfOutlined,
+  FileImageOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FileUnknownOutlined,
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
@@ -76,6 +83,270 @@ const DaysBadge = ({ days, done }) => {
   );
 };
 
+// ─── File Icon ────────────────────────────────────────────────────────────────
+const FileIcon = ({ name }) => {
+  const ext = name?.split(".").pop()?.toLowerCase();
+  if (["pdf"].includes(ext))
+    return <FilePdfOutlined className="text-red-500" />;
+  if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext))
+    return <FileImageOutlined className="text-purple-500" />;
+  if (["doc", "docx"].includes(ext))
+    return <FileWordOutlined className="text-blue-500" />;
+  if (["xls", "xlsx", "csv"].includes(ext))
+    return <FileExcelOutlined className="text-green-500" />;
+  return <FileUnknownOutlined className="text-slate-400" />;
+};
+
+// ─── File Upload Box ──────────────────────────────────────────────────────────
+const FileUploadBox = ({ taskId, onSuccess }) => {
+  const [file, setFile] = useState(null);
+  const [izoh, setIzoh] = useState("");
+  const [nomi, setNomi] = useState("");
+  const [bajarildi, setBajarildi] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      setFile(selected);
+      if (!nomi) setNomi(selected.name);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) {
+      setFile(dropped);
+      if (!nomi) setNomi(dropped.name);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
+  const handleSubmit = async () => {
+    if (!file || submitting) return;
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("fayl", file);
+      if (izoh) formData.append("izoh", izoh);
+      if (nomi) formData.append("nomi", nomi);
+      formData.append("bajarildi", bajarildi);
+
+      await api.post(`${API_ENDPOINTS.TOPSHIRIQLAR.LIST}${taskId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Fayl muvaffaqiyatli yuklandi!");
+      setFile(null);
+      setIzoh("");
+      setNomi("");
+      setBajarildi(true);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      message.error("Fayl yuklashda xatolik yuz berdi.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="rounded-2xl border border-slate-200 shadow-sm bg-white overflow-hidden">
+        <h2 className="px-5 py-3.5 border-b border-slate-100 text-slate-800 font-semibold">
+          Topshiriqni yuklash
+        </h2>
+        {/* Header */}
+        {/* <div className="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2 bg-white">
+          <PaperClipOutlined className="text-indigo-500" />
+          <span className="text-slate-700 font-semibold text-sm">
+            Fayl yuklash
+          </span>
+        </div> */}
+
+        <div className="p-5 space-y-4">
+          {/* Drop zone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => !file && fileInputRef.current?.click()}
+            className={`relative rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer
+            ${
+              dragOver
+                ? "border-indigo-400 bg-indigo-50"
+                : file
+                  ? "border-emerald-300 bg-emerald-50 cursor-default"
+                  : "border-slate-200 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/40"
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {file ? (
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+                  <FileIcon name={file.name} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-700 truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {formatFileSize(file.size)}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile();
+                  }}
+                  className="w-7 h-7 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
+                >
+                  <DeleteOutlined style={{ fontSize: 12 }} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-3">
+                  <UploadOutlined className="text-indigo-500 text-xl" />
+                </div>
+                <p className="text-sm font-medium text-slate-600">
+                  Faylni bu yerga tashlang
+                </p>
+                <p className="text-xs text-slate-400 mt-1 flex gap-1 items-center">
+                  yoki
+                  <span className="text-indigo-600 font-semibold underline underline-offset-2">
+                    kompyuterdan tanlang
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Optional fields */}
+          <div className="space-y-3">
+            {/* Nomi */}
+            <div>
+              <label className="block text-xs text-slate-400 uppercase tracking-wide font-medium mb-1.5">
+                Nomi{" "}
+                <span className="normal-case text-slate-300">(ixtiyoriy)</span>
+              </label>
+              <input
+                type="text"
+                value={nomi}
+                onChange={(e) => setNomi(e.target.value)}
+                placeholder="Fayl nomi..."
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 focus:bg-white transition-all"
+              />
+            </div>
+
+            {/* Izoh */}
+            <div>
+              <label className="block text-xs text-slate-400 uppercase tracking-wide font-medium mb-1.5">
+                Izoh{" "}
+                <span className="normal-case text-slate-300">(ixtiyoriy)</span>
+              </label>
+              <textarea
+                value={izoh}
+                onChange={(e) => setIzoh(e.target.value)}
+                placeholder="Bu fayl haqida izoh..."
+                rows={2}
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 focus:bg-white transition-all resize-none"
+              />
+            </div>
+
+            {/* Bajarildi toggle */}
+            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50 border border-slate-200">
+              <div>
+                <p className="text-sm font-medium text-slate-700">Bajarildi</p>
+                <p className="text-xs text-slate-400">
+                  Topshiriq bajarilgan deb belgilash
+                </p>
+              </div>
+              <button
+                onClick={() => setBajarildi((v) => !v)}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                  bajarildi ? "bg-indigo-600" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                    bajarildi ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Submit button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!file || submitting}
+            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 flex items-center justify-center gap-2 ${
+              file && !submitting
+                ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-indigo-200 cursor-pointer"
+                : "bg-slate-100 text-slate-300 cursor-not-allowed"
+            }`}
+          >
+            {submitting ? (
+              <>
+                <svg
+                  className="animate-spin w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+                Yuklanmoqda...
+              </>
+            ) : (
+              <>
+                <UploadOutlined />
+                Yuklash
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // ─── Chat Comment Box ─────────────────────────────────────────────────────────
 const ChatCommentBox = ({ taskData, onSuccess }) => {
   const [text, setText] = useState("");
@@ -103,7 +374,6 @@ const ChatCommentBox = ({ taskData, onSuccess }) => {
         },
       );
       setText("");
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "24px";
         textareaRef.current.focus();
@@ -133,12 +403,9 @@ const ChatCommentBox = ({ taskData, onSuccess }) => {
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-white border-t border-slate-100">
-      {/* User avatar */}
       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 flex-shrink-0 mb-0.5">
         <UserOutlined style={{ fontSize: 13 }} />
       </div>
-
-      {/* Textarea bubble */}
       <div
         className={`flex-1 flex items-end gap-2 bg-slate-50 border rounded-2xl px-3.5 py-2 transition-all duration-150 ${
           text
@@ -158,8 +425,6 @@ const ChatCommentBox = ({ taskData, onSuccess }) => {
           style={{ height: "24px" }}
         />
       </div>
-
-      {/* Send button */}
       <button
         onClick={handleSubmit}
         disabled={!canSend}
@@ -215,11 +480,21 @@ const TopshiriqDetailPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/bayonnomalar/topshiriqlar/${id}/`);
+      message.success("Topshiriq o'chirildi");
+      navigate(-1);
+    } catch (error) {
+      console.error(error);
+      message.error("O'chirishda xatolik yuz berdi");
+    }
+  };
+
   useEffect(() => {
     fetchDetail();
   }, [id]);
 
-  // Scroll to bottom of messages when comments update
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -246,15 +521,26 @@ const TopshiriqDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* ── Hero Header ── */}
       <div className={`bg-gradient-to-r ${cfg.bg} shadow-lg rounded-t-xl`}>
-        <div className="max-w-7xl mx-auto px-6 pt-5 pb-8">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(-1)}
-            className="mb-5 border-white/30 text-white hover:bg-white/20 hover:text-white hover:border-white/50 bg-white/10"
-            ghost
-          >
-            Orqaga
-          </Button>
+        <div className="max-w-7xl mx-auto  px-6 pt-5 pb-8">
+          <div className="mb-5 flex items-center justify-between">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(-1)}
+              className=" border-white/30 text-white hover:bg-white/20 hover:text-white hover:border-white/50 bg-white/10"
+              ghost
+            >
+              Orqaga
+            </Button>
+            <Button
+              icon={<DeleteOutlined />}
+              className=""
+              onClick={handleDelete}
+              type="primary"
+              danger
+            >
+              O'chirish
+            </Button>
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
@@ -398,14 +684,11 @@ const TopshiriqDetailPage = () => {
                   <>
                     {data.izohlar.map((izoh) => (
                       <div key={izoh.id} className="flex items-start gap-3">
-                        {/* Avatar */}
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
                           {izoh.muallif_fio
                             ? izoh.muallif_fio.charAt(0).toUpperCase()
                             : "?"}
                         </div>
-
-                        {/* Message bubble */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline gap-2 mb-1">
                             <span className="text-xs font-semibold text-slate-700">
@@ -427,6 +710,17 @@ const TopshiriqDetailPage = () => {
                                 </span>
                               )}
                             </p>
+                            {izoh.fayl && (
+                              <a
+                                href={izoh.fayl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center gap-2 text-sm text-indigo-600 font-semibold"
+                              >
+                                <PaperClipOutlined />
+                                Faylni ko'rish
+                              </a>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -454,6 +748,9 @@ const TopshiriqDetailPage = () => {
               {/* Chat input */}
               <ChatCommentBox taskData={data} onSuccess={fetchDetail} />
             </div>
+
+            {/* ── File Upload ── */}
+            <FileUploadBox taskId={id} onSuccess={fetchDetail} />
           </div>
 
           {/* Right sidebar */}

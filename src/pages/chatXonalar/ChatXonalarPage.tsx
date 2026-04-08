@@ -461,9 +461,9 @@ const ChatXonalarPage = () => {
             rules={[{ required: true, message: "Xona turini tanlang" }]}
           >
             <Select placeholder="Turini tanlang">
-              <Select.Option value="yakka">Yakka</Select.Option>
-              <Select.Option value="guruh">Guruh</Select.Option>
-              <Select.Option value="obyekt">Obyekt</Select.Option>
+              <Select.Option value="yakka">Shaxsiy chat</Select.Option>
+              <Select.Option value="guruh">Guruhlar kesimida</Select.Option>
+              <Select.Option value="obyekt">Obyektlar kesimida</Select.Option>
             </Select>
           </Form.Item>
 

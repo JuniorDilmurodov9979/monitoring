@@ -4,7 +4,7 @@ import type { AxiosError } from "axios";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
-import { data } from "react-router-dom";
+import { data, Link } from "react-router-dom";
 
 type ErrorResponse = {
   message?: string;
@@ -705,6 +705,7 @@ const ProfilePage = () => {
                   label="Telegram"
                   value={user.telegram_id ? `${user.telegram_id}` : "Ulanmagan"}
                   isEmpty={!user.telegram_id}
+                  linkPrefix={user.telegram_id ? "https://t.me/" : undefined}
                 />
               </div>
             </div>
@@ -944,7 +945,7 @@ const InfoCard = ({
 
   if (linkPrefix && value && !isEmpty) {
     return (
-      <a href={`${linkPrefix}${value}`} className="block">
+      <a href={`${linkPrefix}${value}`} target="_blank" className="block">
         {content}
       </a>
     );

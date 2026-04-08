@@ -132,7 +132,9 @@ const TopshiriqQoshishModal = ({
   >([]);
   const [boshqarmaLoading, setBoshqarmaLoading] = useState(false);
   const [xodimLoading, setXodimLoading] = useState(false);
-
+  const [selectedBoshqarma, setSelectedBoshqarma] = useState<number | null>(
+    null,
+  );
   // Add this useEffect inside the component:
   useEffect(() => {
     if (open) {
@@ -146,13 +148,16 @@ const TopshiriqQoshishModal = ({
 
       // Fetch xodimlar
       setXodimLoading(true);
-      api
-        .get("/auth/users/?all=true")
-        .then((res) => setXodimlar(res.data?.results ?? res.data))
-        .catch(() => message.error("Xodimlar yuklanmadi"))
-        .finally(() => setXodimLoading(false));
+
+      if (selectedBoshqarma) {
+        api
+          .get(`/auth/users/?boshqarma=${selectedBoshqarma}&?all=true`)
+          .then((res) => setXodimlar(res.data?.results ?? res.data))
+          .catch(() => message.error("Xodimlar yuklanmadi"))
+          .finally(() => setXodimLoading(false));
+      }
     }
-  }, [open]);
+  }, [open, selectedBoshqarma]);
 
   const handleCancel = () => {
     form.resetFields();
@@ -255,7 +260,7 @@ const TopshiriqQoshishModal = ({
                 </p>
                 <p className="text-emerald-200 text-xs font-mono mt-0.5">
                   Bayonnoma nomi:
-                  <span className="font-bold">{bayonnomaRaqami}</span>
+                  <span className="ml-1 font-bold">{bayonnomaRaqami}</span>
                 </p>
               </div>
             </div>
@@ -365,6 +370,7 @@ const TopshiriqQoshishModal = ({
               rules={[{ required: true, message: "Band raqamini kiriting!" }]}
             >
               <InputNumber
+                type="number"
                 min={1}
                 style={{ width: 250 }}
                 placeholder="Band raqamini kiriting"
@@ -389,6 +395,7 @@ const TopshiriqQoshishModal = ({
               <Select
                 showSearch
                 allowClear
+                onChange={(id) => setSelectedBoshqarma(id)}
                 loading={boshqarmaLoading}
                 placeholder="Boshqarmani tanlang..."
                 filterOption={(input, option) =>
@@ -433,6 +440,7 @@ const TopshiriqQoshishModal = ({
                   label: x.fio,
                 }))}
                 className="rounded-xl! border-slate-200! py-1.5! hover:border-emerald-300!‰ w-full!"
+                disabled={!selectedBoshqarma || xodimLoading}
               />
             </Form.Item>
           </div>

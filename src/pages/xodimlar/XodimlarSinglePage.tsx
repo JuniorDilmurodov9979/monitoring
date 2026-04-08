@@ -101,7 +101,7 @@ const XodimlarSinglePage = () => {
   const fetchUser = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`auth/users/${id}`);
+      const res = await api.get(`auth/users/${id}/`);
       setUser(res.data);
     } catch (error) {
       console.error(error);

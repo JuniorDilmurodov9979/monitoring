@@ -584,6 +584,7 @@ const HujjatlarPage = () => {
             name="fayl"
             label={<FieldLabel>Fayl yuklash</FieldLabel>}
             valuePropName="file"
+            rules={[{ required: true, message: "Fayl majburiy" }]}
           >
             <Upload beforeUpload={() => false} maxCount={1}>
               <Button icon={<UploadOutlined />} className="rounded-lg">

@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { useNavigate, useParams } from "react-router-dom";
+import Can from "@/shared/components/guards/Can";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,12 +109,12 @@ const getAvatarColor = (name: string) => {
     "#13c2c2",
     "#f5222d",
   ];
-  return colors[name.charCodeAt(0) % colors.length];
+  return colors[name?.charCodeAt(0) % colors.length];
 };
 
 const getInitials = (fio: string) =>
   fio
-    .split(" ")
+    ?.split(" ")
     .slice(0, 2)
     .map((w) => w[0])
     .join("")
@@ -126,7 +127,11 @@ const formatTime = (vaqt: string) =>
   });
 
 const getUserLabel = (u: User) => {
-  const name = u.fio ?? [u.fio].filter(Boolean).join(" ") ?? u.username ?? `Foydalanuvchi ${u.id}`;
+  const name =
+    u.fio ??
+    [u.fio].filter(Boolean).join(" ") ??
+    u.username ??
+    `Foydalanuvchi ${u.id}`;
   return name;
 };
 
@@ -219,7 +224,13 @@ const XabarItem = ({ xabar }: { xabar: Xabar }) => (
           {xabar.yuboruvchi_fio}
         </span>
         <span className="text-[10px] text-gray-400">
-          {formatTime(xabar.vaqt)}
+          {new Date(xabar.vaqt).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </span>
         {!xabar.o_qilgan && (
           <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block flex-shrink-0" />
@@ -512,19 +523,21 @@ const ChatXonaSinglePage = () => {
             )}
           </div>
 
-          {data && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Tooltip title="Ishtirokchi qo'shish">
-                <Button
-                  type="text"
-                  icon={<UserAddOutlined />}
-                  size="small"
-                  className="text-blue-500"
-                  onClick={() => setAddModal(true)}
-                />
-              </Tooltip>
-            </div>
-          )}
+          <Can action="canCreate">
+            {data && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Tooltip title="Ishtirokchi qo'shish">
+                  <Button
+                    type="text"
+                    icon={<UserAddOutlined />}
+                    size="small"
+                    className="text-blue-500"
+                    onClick={() => setAddModal(true)}
+                  />
+                </Tooltip>
+              </div>
+            )}
+          </Can>
         </div>
 
         {data && (
@@ -670,15 +683,17 @@ const ChatXonaSinglePage = () => {
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Ishtirokchilar
                     </span>
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<UserAddOutlined />}
-                      className="text-xs p-0 h-auto"
-                      onClick={() => setAddModal(true)}
-                    >
-                      Qo'shish
-                    </Button>
+                    <Can action="canCreate">
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<UserAddOutlined />}
+                        className="text-xs p-0 h-auto"
+                        onClick={() => setAddModal(true)}
+                      >
+                        Qo'shish
+                      </Button>
+                    </Can>
                   </div>
                   {data.ishtirokchilar.map((ishtirokchi) => (
                     <IshtirokchiCard

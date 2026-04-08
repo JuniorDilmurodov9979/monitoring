@@ -11,7 +11,10 @@ import {
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
-import { LAVOZIM_OPTIONS } from "@/shared/components/const/constValues";
+import {
+  LAVOZIM_RAHBARIYAT_OPTIONS,
+  LAVOZIM_STAFF_OPTIONS,
+} from "@/shared/components/const/constValues";
 
 const { Option } = Select;
 
@@ -29,9 +32,17 @@ interface AddUserModalProps {
 
 const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
   const [form] = Form.useForm();
+  const boshqarmaId = Form.useWatch("boshqarma", form);
+  const boshqarmaTanlangan =
+    boshqarmaId != null && boshqarmaId !== "";
   const [loading, setLoading] = useState(false);
   const [boshqarmalar, setBoshqarmalar] = useState<Boshqarma[]>([]);
   const [boshqarmaLoading, setBoshqarmaLoading] = useState(false);
+  const requiredLabel = (text: string) => (
+    <span className="text-sm font-medium text-gray-700">
+      {text} <span className="text-red-500">*</span>
+    </span>
+  );
 
   useEffect(() => {
     if (open) {
@@ -55,8 +66,17 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      if (!values.lavozim && !values.rahbariyat_lavozim) {
+        message.error("Lavozim yoki Rahbariyat lavozimini tanlang");
+        return;
+      }
+      const { rahbariyat_lavozim, ...rest } = values;
+      const payload = {
+        ...rest,
+        lavozim: rahbariyat_lavozim || values.lavozim,
+      };
       setLoading(true);
-      await api.post(API_ENDPOINTS.USERS.CREATE, values);
+      await api.post(API_ENDPOINTS.USERS.CREATE, payload);
       message.success("Xodim muvaffaqiyatli qo'shildi!");
       form.resetFields();
       onSuccess();
@@ -110,9 +130,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
         {/* FIO */}
         <Form.Item
           name="fio"
-          label={
-            <span className="text-sm font-medium text-gray-700">F.I.O</span>
-          }
+          label={requiredLabel("F.I.O")}
           rules={[{ required: true, message: "F.I.O ni kiriting" }]}
         >
           <Input
@@ -127,11 +145,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           <Col span={12}>
             <Form.Item
               name="username"
-              label={
-                <span className="text-sm font-medium text-gray-700">
-                  Foydalanuvchi nomi
-                </span>
-              }
+              label={requiredLabel("Foydalanuvchi nomi")}
               rules={[
                 { required: true, message: "Username kiriting" },
                 { min: 3, message: "Kamida 3 ta belgi" },
@@ -159,6 +173,12 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
                 placeholder="Boshqarmani tanlang"
                 size="large"
                 loading={boshqarmaLoading}
+                allowClear
+                onChange={(id) => {
+                  if (id) {
+                    form.setFieldValue("rahbariyat_lavozim", undefined);
+                  }
+                }}
                 suffixIcon={
                   boshqarmaLoading ? undefined : (
                     <BankOutlined className="text-gray-400" />
@@ -186,7 +206,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           </Col>
         </Row>
 
-        {/* Lavozim + Telefon */}
+        {/* Lavozim + Rahbariyat (alohida selectlar) va Telefon */}
         <Row gutter={12}>
           <Col span={12}>
             <Form.Item
@@ -196,10 +216,16 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
                   Lavozim
                 </span>
               }
-              rules={[{ required: true, message: "Lavozimni tanlang" }]}
             >
-              <Select placeholder="Lavozimni tanlang" size="large">
-                {LAVOZIM_OPTIONS.map((l) => (
+              <Select
+                placeholder="Lavozimni tanlang"
+                size="large"
+                allowClear
+                onChange={() =>
+                  form.setFieldValue("rahbariyat_lavozim", undefined)
+                }
+              >
+                {LAVOZIM_STAFF_OPTIONS.map((l) => (
                   <Option key={l.value} value={l.value}>
                     {l.label}
                   </Option>
@@ -209,12 +235,34 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           </Col>
           <Col span={12}>
             <Form.Item
-              name="telefon"
+              name="rahbariyat_lavozim"
               label={
                 <span className="text-sm font-medium text-gray-700">
-                  Telefon
+                  Rahbariyat
                 </span>
               }
+            >
+              <Select
+                placeholder="Rahbariyat lavozimi"
+                size="large"
+                allowClear
+                disabled={boshqarmaTanlangan}
+                onChange={() => form.setFieldValue("lavozim", undefined)}
+              >
+                {LAVOZIM_RAHBARIYAT_OPTIONS.map((l) => (
+                  <Option key={l.value} value={l.value}>
+                    {l.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={12}>
+          <Col span={12}>
+            <Form.Item
+              name="telefon"
+              label={requiredLabel("Telefon")}
               rules={[
                 { required: true, message: "Telefon raqamini kiriting" },
                 {
@@ -251,11 +299,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
 
         <Form.Item
           name="email"
-          label={
-            <span className="text-sm font-medium text-gray-700">
-              Elektron pochta
-            </span>
-          }
+          label={requiredLabel("Elektron pochta")}
           rules={[
             { required: true, message: "Email kiriting" },
             { type: "email", message: "To'g'ri email kiriting" },
@@ -273,9 +317,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           <Col span={12}>
             <Form.Item
               name="password"
-              label={
-                <span className="text-sm font-medium text-gray-700">Parol</span>
-              }
+              label={requiredLabel("Parol")}
               rules={[
                 { required: true, message: "Parolni kiriting" },
                 { min: 8, message: "Kamida 8 ta belgi" },
@@ -292,11 +334,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           <Col span={12}>
             <Form.Item
               name="password_confirm"
-              label={
-                <span className="text-sm font-medium text-gray-700">
-                  Parolni tasdiqlash
-                </span>
-              }
+              label={requiredLabel("Parolni tasdiqlash")}
               dependencies={["password"]}
               rules={[
                 { required: true, message: "Parolni tasdiqlang" },

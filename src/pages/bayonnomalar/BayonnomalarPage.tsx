@@ -402,7 +402,7 @@ const MeningTopshiriqlarSection = ({
             {topshiriqlar.map((t) => (
               <div
                 key={t.id}
-                onClick={() => navigate(`/bayonnomalar/${t.id}`)}
+                onClick={() => navigate(`/topshiriqlar/${t.id}`)}
                 className={`
                   group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm
                   cursor-pointer transition-all duration-200
