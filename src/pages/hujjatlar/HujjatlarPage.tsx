@@ -128,6 +128,8 @@ const HujjatlarPage = () => {
   >([]);
 
   const { user } = useAuth();
+  console.log(user);
+  
 
   const flattenKategoriyalar = (nodes: any[]): SelectOption[] =>
     nodes.flatMap((n) => [
@@ -174,7 +176,7 @@ const HujjatlarPage = () => {
   // Fetch boshqarmalar options
   useEffect(() => {
     api
-      .get("/core/boshqarmalar/")
+      .get("/core/boshqarmalar/?all=true")
       .then((res) => {
         const results = res.data?.results ?? res.data;
         setBoshqarmalarOptions(
@@ -183,6 +185,8 @@ const HujjatlarPage = () => {
       })
       .catch(console.error);
   }, []);
+  console.log(boshqarmalarOptions);
+  
 
   // Fetch obyektlar options
   useEffect(() => {

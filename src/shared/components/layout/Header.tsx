@@ -101,7 +101,6 @@ const Header = () => {
     return name[0]?.toUpperCase() ?? "U";
   };
 
-  console.log(user);
   
 
   return (
