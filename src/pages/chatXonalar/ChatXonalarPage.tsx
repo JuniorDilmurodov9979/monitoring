@@ -264,7 +264,7 @@ const ChatXonalarPage = () => {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      const res = await api.get<{ results: User[] } | User[]>("auth/users/");
+      const res = await api.get<{ results: User[] } | User[]>("auth/users/?all=true");
       const list = Array.isArray(res.data) ? res.data : res.data.results;
       setUsers(list);
     } catch {
