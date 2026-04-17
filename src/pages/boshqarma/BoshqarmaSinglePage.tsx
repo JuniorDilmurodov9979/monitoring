@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Modal, Form, Input, message } from "antd";
+import { Spin, Modal, Form, Input, Select, message } from "antd";
 import {
   ArrowLeftOutlined,
   UserOutlined,
@@ -13,8 +13,10 @@ import {
   WarningOutlined,
   MinusCircleOutlined,
   ExclamationCircleOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
+import Can from "@/shared/components/guards/Can";
 
 interface UserType {
   id: number;
@@ -28,6 +30,7 @@ interface UserType {
 interface HujjatType {
   id: number;
   nomi: string;
+  kategoriya?: number | null;
   obyekt_nomi: string;
   kategoriya_nomi: string;
   boshqarma_nomi: string;
@@ -58,8 +61,26 @@ interface BoshqarmaUpdatePayload {
   qisqa_nomi: string;
 }
 
+interface KategoriyaType {
+  id: number;
+  nomi: string;
+  children?: KategoriyaType[];
+}
+
+interface ObyektType {
+  id: number;
+  nomi: string;
+}
+
+interface NewKategoriyaPayload {
+  nomi: string;
+  boshqarma: number;
+  obyekt: number;
+  tavsif?: string;
+}
+
 type TabKey = "xodimlar" | "hujjatlar";
-type HujjatCategoryKey = "all" | string;
+type HujjatCategoryKey = "all" | number;
 
 const HOLAT_CONFIG: Record<
   string,
@@ -140,6 +161,7 @@ const BoshqarmaSinglePage = () => {
   const [usersLoading, setUsersLoading] = useState(false);
 
   const [hujjatlar, setHujjatlar] = useState<HujjatType[]>([]);
+  const [allHujjatlar, setAllHujjatlar] = useState<HujjatType[]>([]);
   const [hujjatlarLoading, setHujjatlarLoading] = useState(false);
 
   const [statistika, setStatistika] = useState<StatistikaType | null>(null);
@@ -150,6 +172,13 @@ const BoshqarmaSinglePage = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [editFetchLoading, setEditFetchLoading] = useState(false);
   const [form] = Form.useForm<BoshqarmaUpdatePayload>();
+  const [newKategoriyaOpen, setNewKategoriyaOpen] = useState(false);
+  const [newKategoriyaLoading, setNewKategoriyaLoading] = useState(false);
+  const [kategoriyalar, setKategoriyalar] = useState<KategoriyaType[]>([]);
+  const [boshqarmalar, setBoshqarmalar] = useState<BoshqarmaType[]>([]);
+  const [obyektlar, setObyektlar] = useState<ObyektType[]>([]);
+  const [fetchError, setFetchError] = useState("");
+  const [kategoriyaForm] = Form.useForm<NewKategoriyaPayload>();
 
   const fetchBoshqarmaDetail = async () => {
     try {
@@ -190,9 +219,31 @@ const BoshqarmaSinglePage = () => {
       const res = await api.get(
         `hujjatlar/boshqarma_hujjatlari/?boshqarma=${id}`,
       );
-      setHujjatlar(res.data);
+      const list = Array.isArray(res.data)
+        ? res.data
+        : (res.data?.results ?? []);
+      setAllHujjatlar(list);
+      setHujjatlar(list);
     } catch (error) {
       console.error("Error fetching hujjatlar:", error);
+    } finally {
+      setHujjatlarLoading(false);
+    }
+  };
+
+  const fetchKategoriyaHujjatlari = async (kategoriyaId: number) => {
+    try {
+      setHujjatlarLoading(true);
+      const res = await api.get(
+        `hujjatlar/kategoriya_hujjatlari/?kategoriya=${kategoriyaId}`,
+      );
+      const list = Array.isArray(res.data)
+        ? res.data
+        : (res.data?.results ?? []);
+      setHujjatlar(list);
+    } catch (error) {
+      console.error("Error fetching kategoriya hujjatlari:", error);
+      setHujjatlar([]);
     } finally {
       setHujjatlarLoading(false);
     }
@@ -209,6 +260,37 @@ const BoshqarmaSinglePage = () => {
       console.error("Error fetching statistika:", error);
     } finally {
       setStatistikaLoading(false);
+    }
+  };
+
+  const fetchKategoriyalar = async () => {
+    if (!id) return;
+    try {
+      const { data } = await api.get(
+        `hujjatlar/kategoriyalar/boshqarma_kategoriyalari/?boshqarma=${id}`,
+      );
+      setKategoriyalar(Array.isArray(data) ? data : (data.results ?? []));
+      setFetchError("");
+    } catch (e) {
+      setFetchError("Kategoriyalarni yuklashda xato: " + e);
+    }
+  };
+
+  const fetchBoshqarmalar = async () => {
+    try {
+      const { data } = await api.get("core/boshqarmalar/");
+      setBoshqarmalar(Array.isArray(data) ? data : (data.results ?? []));
+    } catch {
+      /* silent */
+    }
+  };
+
+  const fetchObyektlar = async () => {
+    try {
+      const { data } = await api.get("obyektlar/");
+      setObyektlar(Array.isArray(data) ? data : (data.results ?? []));
+    } catch {
+      /* silent */
     }
   };
 
@@ -244,36 +326,79 @@ const BoshqarmaSinglePage = () => {
     form.resetFields();
   };
 
+  const handleOpenNewKategoriya = () => {
+    setNewKategoriyaOpen(true);
+    Promise.all([fetchBoshqarmalar(), fetchObyektlar()]);
+    if (id) {
+      kategoriyaForm.setFieldValue("boshqarma", Number(id));
+    }
+  };
+
+  const handleCreateKategoriya = async () => {
+    try {
+      const values = await kategoriyaForm.validateFields();
+      setNewKategoriyaLoading(true);
+      await api.post("hujjatlar/kategoriyalar/", {
+        nomi: values.nomi?.trim(),
+        boshqarma: Number(values.boshqarma),
+        obyekt: Number(values.obyekt),
+        tavsif: values.tavsif ?? "",
+      });
+      message.success("Kategoriya muvaffaqiyatli qo'shildi");
+      setNewKategoriyaOpen(false);
+      kategoriyaForm.resetFields();
+      setActiveHujjatCategory("all");
+      fetchHujjatlar();
+      fetchKategoriyalar();
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      message.error("Kategoriya qo'shishda xatolik yuz berdi");
+    } finally {
+      setNewKategoriyaLoading(false);
+    }
+  };
+
+  const handleCloseNewKategoriya = () => {
+    setNewKategoriyaOpen(false);
+    kategoriyaForm.resetFields();
+    setFetchError("");
+  };
+
   useEffect(() => {
     if (id) {
       fetchUsers();
       fetchHujjatlar();
       fetchStatistika();
+      fetchKategoriyalar();
     }
   }, [id]);
 
   const isLoading = activeTab === "xodimlar" ? usersLoading : hujjatlarLoading;
 
-  const hujjatCategories: string[] = Array.from(
-    new Set(
-      hujjatlar
-        .map((d: HujjatType) => d.kategoriya_nomi)
-        .filter((v: string) => Boolean(v?.trim())),
-    ),
-  ).sort((a, b) => a.localeCompare(b, "uz"));
+  const flattenKategoriyalar = (arr: KategoriyaType[]): KategoriyaType[] =>
+    arr.flatMap((item) => [{ id: item.id, nomi: item.nomi }]);
 
-  const filteredHujjatlar =
-    activeHujjatCategory === "all"
-      ? hujjatlar
-      : hujjatlar.filter((d) => d.kategoriya_nomi === activeHujjatCategory);
+  const hujjatCategories = flattenKategoriyalar(kategoriyalar).sort((a, b) =>
+    a.nomi.localeCompare(b.nomi, "uz"),
+  );
 
   // keep active category valid when data changes / tab changes
   useEffect(() => {
     if (activeTab !== "hujjatlar") return;
     if (activeHujjatCategory === "all") return;
-    if (hujjatCategories.includes(activeHujjatCategory)) return;
+    if (hujjatCategories.some((item) => item.id === activeHujjatCategory))
+      return;
     setActiveHujjatCategory("all");
   }, [activeTab, activeHujjatCategory, hujjatCategories]);
+
+  useEffect(() => {
+    if (activeTab !== "hujjatlar") return;
+    if (activeHujjatCategory === "all") {
+      setHujjatlar(allHujjatlar);
+      return;
+    }
+    fetchKategoriyaHujjatlari(activeHujjatCategory);
+  }, [activeTab, activeHujjatCategory, allHujjatlar]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", {
@@ -320,13 +445,15 @@ const BoshqarmaSinglePage = () => {
               <EditOutlined className="text-[11px]" />
               Tahrirlash
             </button>
-            <button
-              onClick={handleDelete}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-full transition-colors cursor-pointer"
-            >
-              <DeleteOutlined className="text-[11px]" />
-              O'chirish
-            </button>
+            <Can action="canDelete">
+              <button
+                onClick={handleDelete}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-full transition-colors cursor-pointer"
+              >
+                <DeleteOutlined className="text-[11px]" />
+                O'chirish
+              </button>
+            </Can>
           </div>
         </div>
       </div>
@@ -481,58 +608,69 @@ const BoshqarmaSinglePage = () => {
         />
       ) : (
         <div className="space-y-3">
-          {/* category menu */}
-          <div className="flex flex-wrap gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
-            <button
-              onClick={() => setActiveHujjatCategory("all")}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
-                activeHujjatCategory === "all"
-                  ? "bg-slate-800 text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Hammasi
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            {/* category menu */}
+            <div className="flex flex-wrap gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
+              <button
+                onClick={() => setActiveHujjatCategory("all")}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
                   activeHujjatCategory === "all"
-                    ? "bg-white/15 text-white"
-                    : "bg-slate-100 text-slate-500"
+                    ? "bg-slate-800 text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                {hujjatlar.length}
-              </span>
-            </button>
-
-            {hujjatCategories.map((cat) => {
-              const count = hujjatlar.filter((d) => d.kategoriya_nomi === cat)
-                .length;
-              const isActive = activeHujjatCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setActiveHujjatCategory(cat)}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
-                    isActive
-                      ? "bg-slate-800 text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                Hammasi
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                    activeHujjatCategory === "all"
+                      ? "bg-white/15 text-white"
+                      : "bg-slate-100 text-slate-500"
                   }`}
                 >
-                  {cat}
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                  {allHujjatlar.length}
+                </span>
+              </button>
+
+              {hujjatCategories.map((cat) => {
+                const count = allHujjatlar.filter(
+                  (d) => d.kategoriya_nomi === cat.nomi,
+                ).length;
+                const isActive = activeHujjatCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveHujjatCategory(cat.id)}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
                       isActive
-                        ? "bg-white/15 text-white"
-                        : "bg-slate-100 text-slate-500"
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+                    {cat.nomi}
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                        isActive
+                          ? "bg-white/15 text-white"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={handleOpenNewKategoriya}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            >
+              <PlusOutlined className="text-[11px]" />
+              Yangi kategoriya
+            </button>
           </div>
 
-          {filteredHujjatlar.length === 0 ? (
+          {hujjatlar.length === 0 ? (
             <EmptyState
               icon={<FileDoneOutlined />}
               text="Ushbu kategoriyada hujjatlar topilmadi"
@@ -561,7 +699,7 @@ const BoshqarmaSinglePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredHujjatlar.map((doc) => {
+                  {hujjatlar.map((doc) => {
                     const holat = getHolatConfig(doc.holat);
                     return (
                       <tr
@@ -701,6 +839,105 @@ const BoshqarmaSinglePage = () => {
             </Form.Item>
           </Form>
         </Spin>
+      </Modal>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 pb-1">
+            <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center">
+              <PlusOutlined className="text-indigo-500 text-xs" />
+            </div>
+            <span className="text-sm font-semibold text-slate-700">
+              Yangi kategoriya
+            </span>
+          </div>
+        }
+        open={newKategoriyaOpen}
+        onCancel={handleCloseNewKategoriya}
+        onOk={handleCreateKategoriya}
+        okText="Saqlash"
+        cancelText="Bekor qilish"
+        confirmLoading={newKategoriyaLoading}
+        okButtonProps={{
+          className: "bg-indigo-500 hover:bg-indigo-600 border-indigo-500",
+        }}
+        width={460}
+        centered
+        destroyOnClose
+      >
+        <Form
+          form={kategoriyaForm}
+          layout="vertical"
+          className="mt-4"
+          requiredMark={false}
+        >
+          <Form.Item
+            name="nomi"
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Nomi
+              </span>
+            }
+            rules={[{ required: true, message: "Nomi kiritilishi shart" }]}
+          >
+            <Input
+              placeholder="Kategoriya nomini kiriting"
+              className="rounded-lg text-sm"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="boshqarma"
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Boshqarma
+              </span>
+            }
+            rules={[{ required: true, message: "Boshqarma tanlanishi shart" }]}
+          >
+            <Select
+              placeholder="Boshqarmani tanlang"
+              showSearch
+              optionFilterProp="label"
+              options={boshqarmalar.map((b) => ({
+                value: b.id,
+                label: b.nomi,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="obyekt"
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Obyekt
+              </span>
+            }
+            rules={[{ required: true, message: "Obyekt tanlanishi shart" }]}
+          >
+            <Select
+              placeholder="Obyektni tanlang"
+              showSearch
+              optionFilterProp="label"
+              options={obyektlar.map((o) => ({ value: o.id, label: o.nomi }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="tavsif"
+            label={
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Tavsif
+              </span>
+            }
+          >
+            <Input.TextArea rows={3} placeholder="Ixtiyoriy tavsif" />
+          </Form.Item>
+
+          {fetchError ? (
+            <p className="text-xs text-red-500 -mt-1 mb-0">{fetchError}</p>
+          ) : null}
+        </Form>
       </Modal>
     </div>
   );

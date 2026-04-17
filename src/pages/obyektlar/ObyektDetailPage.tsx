@@ -323,7 +323,7 @@ const ObyektDetailPage = () => {
               {holat.label}
             </span>
 
-            <Can action="canManageUsers">
+            <Can action="canEditObyekt" >
               <button
                 type="button"
                 onClick={() => navigate(`/obyekt/${id}/edit`)}

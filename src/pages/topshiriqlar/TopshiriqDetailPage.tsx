@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
+import Can from "@/shared/components/guards/Can";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const statusConfig = {
@@ -531,15 +532,17 @@ const TopshiriqDetailPage = () => {
             >
               Orqaga
             </Button>
-            <Button
-              icon={<DeleteOutlined />}
-              className=""
-              onClick={handleDelete}
-              type="primary"
-              danger
-            >
-              O'chirish
-            </Button>
+            <Can action="canDeleteTopshiriq">
+              <Button
+                icon={<DeleteOutlined />}
+                className=""
+                onClick={handleDelete}
+                type="primary"
+                danger
+              >
+                O'chirish
+              </Button>
+            </Can>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">

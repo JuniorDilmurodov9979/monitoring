@@ -87,7 +87,7 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <RoleGuard action="canManageUsers" redirectTo="/boshqarma">
+          <RoleGuard action="canSeeBoshSahifa" redirectTo="/">
             <Suspense fallback={<PageLoader />}>
               <DashboardPage />
             </Suspense>
@@ -129,7 +129,7 @@ export const router = createBrowserRouter([
       {
         path: "boshqarma/:id",
         element: (
-          <RoleGuard action="canCreate" redirectTo="/unauthorized">
+          <RoleGuard action="canSeeAllBoshqarmalar" redirectTo="/unauthorized">
             <Suspense fallback={<PageLoader />}>
               <BoshqarmaSinglePage />
             </Suspense>
@@ -140,7 +140,8 @@ export const router = createBrowserRouter([
         path: "bayonnomalar",
         element: (
           <Suspense fallback={<PageLoader />}>
-            <BayonnomalarPage />
+            {/* <BayonnomalarPage /> */}
+            <div className="text-center text-xl text-slate-500">Vaqtincha bayonnomalar sahifasi mavjud emas</div>
           </Suspense>
         ),
       },
@@ -156,7 +157,8 @@ export const router = createBrowserRouter([
         path: "topshiriqlar",
         element: (
           <Suspense fallback={<PageLoader />}>
-            <TopshiriqlarPage />
+            {/* <TopshiriqlarPage /> */}
+            <div className="text-center text-xl text-slate-500">Vaqtincha topshiriqlar sahifasi mavjud emas</div>
           </Suspense>
         ),
       },
@@ -277,9 +279,11 @@ export const router = createBrowserRouter([
       {
         path: "kategoriyalar",
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <KategoriyalarPage />
-          </Suspense>
+          <RoleGuard action="canSeeKategoriyaMenu" redirectTo="/unauthorized">
+            <Suspense fallback={<PageLoader />}>
+              <KategoriyalarPage />
+            </Suspense>
+          </RoleGuard>
         ),
       },
 

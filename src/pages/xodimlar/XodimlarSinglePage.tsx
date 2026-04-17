@@ -26,6 +26,7 @@ import dayjs from "dayjs";
 import api from "@/services/api/axios";
 import { LAVOZIM_OPTIONS } from "@/shared/components/const/constValues";
 import { usePermissions } from "@/features/auth/hooks/usePermissions";
+import Can from "@/shared/components/guards/Can";
 
 interface User {
   id: number;
@@ -112,8 +113,8 @@ const XodimlarSinglePage = () => {
 
   const fetchBoshqarmalar = async () => {
     try {
-      const res = await api.get("core/boshqarmalar/");
-      setBoshqarmalar(res.data.results);
+      const res = await api.get("core/boshqarmalar/?all=true");
+      setBoshqarmalar(res.data);
     } catch (error) {
       console.error(error);
     }
@@ -226,30 +227,34 @@ const XodimlarSinglePage = () => {
             </div>
 
             <div className="flex items-center gap-2 mt-1">
-              <button
-                onClick={openEditModal}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 cursor-pointer"
-              >
-                <EditOutlined className="text-[11px]" />
-                Tahrirlash
-              </button>
-
-              <Popconfirm
-                title="Xodimni o'chirish"
-                description="Haqiqatan ham bu xodimni o'chirmoqchimisiz?"
-                onConfirm={handleDelete}
-                okText="Ha, o'chiring"
-                cancelText="Bekor qilish"
-                okButtonProps={{ danger: true, loading: deleteLoading }}
-              >
+              <Can action="canUpdate">
                 <button
-                  disabled={deleteLoading}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50 cursor-pointer"
+                  onClick={openEditModal}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 cursor-pointer"
                 >
-                  <DeleteOutlined className="text-[11px]" />
-                  O'chirish
+                  <EditOutlined className="text-[11px]" />
+                  Tahrirlash
                 </button>
-              </Popconfirm>
+              </Can>
+
+              <Can action="canDelete">
+                <Popconfirm
+                  title="Xodimni o'chirish"
+                  description="Haqiqatan ham bu xodimni o'chirmoqchimisiz?"
+                  onConfirm={handleDelete}
+                  okText="Ha, o'chiring"
+                  cancelText="Bekor qilish"
+                  okButtonProps={{ danger: true, loading: deleteLoading }}
+                >
+                  <button
+                    disabled={deleteLoading}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50 cursor-pointer"
+                  >
+                    <DeleteOutlined className="text-[11px]" />
+                    O'chirish
+                  </button>
+                </Popconfirm>
+              </Can>
             </div>
           </div>
         </div>

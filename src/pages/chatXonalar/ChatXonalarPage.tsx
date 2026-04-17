@@ -351,7 +351,7 @@ const ChatXonalarPage = () => {
                 title={`${totalUnread} ta o'qilmagan xabar`}
               />
             )}
-            <Can action="canCreate">
+            <Can action="canCreateChatXonalar">
               <Button
                 type="primary"
                 size="middle"

@@ -12,7 +12,6 @@ import {
   Banknote,
 } from "lucide-react";
 import { usePermissions } from "@/features/auth/hooks/usePermissions";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 
 type Permission =
   | "canManageUsers"
@@ -21,7 +20,10 @@ type Permission =
   | "canDelete"
   | "canRead"
   | "canSeeUsers"
-  | "canManageUsers";
+  | "canSeeBoshqarmalar"
+  | "canManageUsers"
+  | "canSeeBoshSahifa"
+  | "canSeeKategoriyaMenu";
 
 const navItems: {
   label: string;
@@ -33,9 +35,14 @@ const navItems: {
     label: "Bosh sahifa",
     path: "/",
     icon: LayoutDashboard,
-    permission: "canManageUsers",
+    permission: "canSeeBoshSahifa",
   },
-  { label: "Boshqarma", path: "/boshqarma", icon: Landmark },
+  {
+    label: "Boshqarmalar",
+    path: "/boshqarma",
+    icon: Landmark,
+    permission: "canSeeBoshqarmalar",
+  },
   { label: "Obyektlar", path: "/obyekt", icon: Building2 },
   { label: "Hujjatlar", path: "/hujjatlar", icon: FileText },
   { label: "Bayonnomalar", path: "/bayonnomalar", icon: ClipboardList },
@@ -59,7 +66,7 @@ const navItems: {
     label: "Kategoriyalar",
     path: "/kategoriyalar",
     icon: ClipboardList,
-    // permission: "canManageUsers",
+    permission: "canSeeKategoriyaMenu",
   },
 ];
 

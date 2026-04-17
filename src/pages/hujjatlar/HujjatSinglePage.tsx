@@ -23,6 +23,7 @@ import type { UploadFile } from "antd/es/upload/interface";
 import dayjs from "dayjs";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
+import Can from "@/shared/components/guards/Can";
 
 interface Hujjat {
   id: number;
@@ -285,22 +286,26 @@ const HujjatSinglePage = () => {
           <div className="flex items-center gap-2 mt-1">
             <HolatBadge holat={data.holat} label={data.holat_display} />
 
-            <button
-              onClick={handleEditOpen}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 cursor-pointer hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150"
-            >
-              <EditOutlined className="text-[11px]" />
-              Tahrirlash
-            </button>
+            <Can action="canEditHujjat">
+              <button
+                onClick={handleEditOpen}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-600 cursor-pointer hover:text-slate-800 text-xs font-medium rounded-xl shadow-sm transition-all duration-150"
+              >
+                <EditOutlined className="text-[11px]" />
+                Tahrirlash
+              </button>
+            </Can>
 
-            <button
-              onClick={handleDelete}
-              disabled={deleteLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 cursor-pointer py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50"
-            >
-              <DeleteOutlined className="text-[11px]" />
-              O'chirish
-            </button>
+            <Can action="canDeleteHujjat">
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="inline-flex items-center gap-1.5 px-3.5 cursor-pointer py-2 bg-white border border-rose-200 hover:border-rose-300 text-rose-500 hover:text-rose-600 text-xs font-medium rounded-xl shadow-sm transition-all duration-150 disabled:opacity-50"
+              >
+                <DeleteOutlined className="text-[11px]" />
+                O'chirish
+              </button>
+            </Can>
           </div>
         </div>
       </div>

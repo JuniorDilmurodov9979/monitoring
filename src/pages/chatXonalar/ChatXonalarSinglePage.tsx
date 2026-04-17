@@ -9,6 +9,7 @@ import {
   Button,
   Input,
   Modal,
+  Popconfirm,
   Select,
   Form,
   message,
@@ -26,6 +27,7 @@ import {
   MessageOutlined,
   UploadOutlined,
   LoadingOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import api from "@/services/api/axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -71,6 +73,7 @@ interface Obyekt {
 
 interface User {
   id: number;
+  fio?: string;
   username?: string;
   full_name?: string;
   first_name?: string;
@@ -129,7 +132,8 @@ const formatTime = (vaqt: string) =>
 const getUserLabel = (u: User) => {
   const name =
     u.fio ??
-    [u.fio].filter(Boolean).join(" ") ??
+    u.full_name ??
+    [u.first_name, u.last_name].filter(Boolean).join(" ") ??
     u.username ??
     `Foydalanuvchi ${u.id}`;
   return name;
@@ -139,7 +143,15 @@ const getObyektLabel = (o: Obyekt) => o.nomi ?? o.name ?? String(o.id);
 
 // ─── IshtirokchiCard ──────────────────────────────────────────────────────────
 
-const IshtirokchiCard = ({ ishtirokchi }: { ishtirokchi: Ishtirokchi }) => (
+const IshtirokchiCard = ({
+  ishtirokchi,
+  deleting,
+  onDelete,
+}: {
+  ishtirokchi: Ishtirokchi;
+  deleting?: boolean;
+  onDelete?: (ishtirokchi: Ishtirokchi) => void;
+}) => (
   <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
     <div className="relative flex-shrink-0">
       <Avatar
@@ -150,22 +162,6 @@ const IshtirokchiCard = ({ ishtirokchi }: { ishtirokchi: Ishtirokchi }) => (
       >
         {!ishtirokchi.avatar && getInitials(ishtirokchi.fio)}
       </Avatar>
-      {ishtirokchi.oqilmagan_soni > 0 && (
-        <Badge
-          count={ishtirokchi.oqilmagan_soni}
-          style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-            backgroundColor: "#1677ff",
-            fontSize: "10px",
-            minWidth: "16px",
-            height: "16px",
-            lineHeight: "16px",
-            padding: "0 4px",
-          }}
-        />
-      )}
     </div>
 
     <div className="flex-1 min-w-0">
@@ -179,27 +175,24 @@ const IshtirokchiCard = ({ ishtirokchi }: { ishtirokchi: Ishtirokchi }) => (
         {getLavozimLabel(ishtirokchi.lavozim)}
       </Tag>
     </div>
-
-    <div className="flex items-center gap-2 flex-shrink-0">
-      <Tooltip
-        title={
-          ishtirokchi.bildirishnoma
-            ? "Bildirishnoma yoqilgan"
-            : "Bildirishnoma o'chirilgan"
-        }
-      >
-        {ishtirokchi.bildirishnoma ? (
-          <BellFilled className="text-blue-500 text-base" />
-        ) : (
-          <BellOutlined className="text-gray-300 text-base" />
-        )}
-      </Tooltip>
-      {ishtirokchi.oqilmagan_soni > 0 && (
-        <span className="text-xs text-blue-500 font-semibold bg-blue-50 px-1.5 py-0.5 rounded-full">
-          {ishtirokchi.oqilmagan_soni} yangi
-        </span>
-      )}
-    </div>
+    {onDelete && (
+      <Can action="canDelete">
+        <Popconfirm
+          title="Ishtirokchini o'chirasizmi?"
+          okText="Ha"
+          cancelText="Yo'q"
+          onConfirm={() => onDelete(ishtirokchi)}
+        >
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            loading={deleting}
+          />
+        </Popconfirm>
+      </Can>
+    )}
   </div>
 );
 
@@ -281,6 +274,9 @@ const ChatXonaSinglePage = () => {
 
   // ── Leave room
   const [leaveLoading, setLeaveLoading] = useState(false);
+  const [deletingParticipantId, setDeletingParticipantId] = useState<
+    number | null
+  >(null);
 
   // ── Fetch room detail
   useEffect(() => {
@@ -311,6 +307,13 @@ const ChatXonaSinglePage = () => {
   useEffect(() => {
     if (!addModal) return;
 
+    if (data) {
+      addForm.setFieldsValue({
+        nomi: data.nomi,
+        turi: data.turi,
+      });
+    }
+
     const fetchObyektlar = async () => {
       setFetchingObyektlar(true);
       try {
@@ -339,7 +342,7 @@ const ChatXonaSinglePage = () => {
 
     fetchObyektlar();
     fetchUsers();
-  }, [addModal]);
+  }, [addModal, data, addForm]);
 
   // ── Auto-scroll to latest message
   useEffect(() => {
@@ -431,6 +434,27 @@ const ChatXonaSinglePage = () => {
     }
   };
 
+  const handleDeleteIshtirokchi = async (ishtirokchi: Ishtirokchi) => {
+    if (!id) return;
+    setDeletingParticipantId(ishtirokchi.id);
+    try {
+      const res = await api.post(`chat/xonalar/${id}/ishtirokchi_ochirish/`, {
+        ishtirokchi_id: ishtirokchi.id,
+        foydalanuvchi_id: ishtirokchi.foydalanuvchi,
+      });
+      messageApi.success(res?.data?.detail ?? "Ishtirokchi o'chirildi");
+      const roomRes = await api.get<XonaDetail>(`chat/xonalar/${id}/`);
+      setData(roomRes.data);
+    } catch (err: any) {
+      messageApi.error(
+
+        err?.response?.data?.error ?? "Ishtirokchini o'chirishda xatolik",
+      );
+    } finally {
+      setDeletingParticipantId(null);
+    }
+  };
+
   // ─── Modal helpers ───────────────────────────────────────────────────────────
 
   const closeAddModal = () => {
@@ -463,6 +487,10 @@ const ChatXonaSinglePage = () => {
     data?.ishtirokchilar.reduce((sum, i) => sum + i.oqilmagan_soni, 0) ?? 0;
   const notifOn =
     data?.ishtirokchilar.filter((i) => i.bildirishnoma).length ?? 0;
+  const addedUserIds = new Set(
+    (data?.ishtirokchilar ?? []).map((ishtirokchi) => ishtirokchi.foydalanuvchi),
+  );
+  const availableUsers = users.filter((u) => !addedUserIds.has(u.id));
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -546,16 +574,13 @@ const ChatXonaSinglePage = () => {
               <UserOutlined className="text-blue-400" />
               <span>{data.ishtirokchilar.length} ta a'zo</span>
             </div>
-            {totalUnread > 0 && (
+            {/* {totalUnread > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-gray-500">
                 <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                 <span>{totalUnread} o'qilmagan xabar</span>
               </div>
-            )}
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <BellFilled className="text-green-400" />
-              <span>{notifOn} bildirishnoma yoq.</span>
-            </div>
+            )} */}
+
           </div>
         )}
       </div>
@@ -564,27 +589,25 @@ const ChatXonaSinglePage = () => {
       <div className="flex border-b border-gray-200 bg-white">
         <button
           onClick={() => setActiveTab("xabarlar")}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
-            activeTab === "xabarlar"
+          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${activeTab === "xabarlar"
               ? "border-blue-500 text-blue-600"
               : "border-transparent text-gray-400 hover:text-gray-600"
-          }`}
+            }`}
         >
           <MessageOutlined />
           Xabarlar
-          {totalUnread > 0 && (
+          {/* {totalUnread > 0 && (
             <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0 rounded-full leading-4">
               {totalUnread}
             </span>
-          )}
+          )} */}
         </button>
         <button
           onClick={() => setActiveTab("ishtirokchilar")}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${
-            activeTab === "ishtirokchilar"
+          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border-b-2 ${activeTab === "ishtirokchilar"
               ? "border-blue-500 text-blue-600"
               : "border-transparent text-gray-400 hover:text-gray-600"
-          }`}
+            }`}
         >
           <TeamOutlined />
           Ishtirokchilar
@@ -699,6 +722,8 @@ const ChatXonaSinglePage = () => {
                     <IshtirokchiCard
                       key={ishtirokchi.id}
                       ishtirokchi={ishtirokchi}
+                      deleting={deletingParticipantId === ishtirokchi.id}
+                      onDelete={handleDeleteIshtirokchi}
                     />
                   ))}
                 </div>
@@ -735,7 +760,7 @@ const ChatXonaSinglePage = () => {
             label="Nomi"
             rules={[{ required: true, message: "Nomini kiriting" }]}
           >
-            <Input placeholder="Ishtirokchi nomi" />
+            <Input placeholder="Nomi avtomatik to'ldiriladi" disabled />
           </Form.Item>
 
           {/* Turi */}
@@ -744,7 +769,7 @@ const ChatXonaSinglePage = () => {
             label="Turi"
             rules={[{ required: true, message: "Turini tanlang" }]}
           >
-            <Select placeholder="Turini tanlang">
+            <Select placeholder="Turi avtomatik tanlanadi" disabled>
               <Select.Option value="yakka">Yakka</Select.Option>
               <Select.Option value="guruh">Guruh</Select.Option>
               <Select.Option value="obyekt">Obyekt</Select.Option>
@@ -810,7 +835,7 @@ const ChatXonaSinglePage = () => {
                   <span>{option.label}</span>
                 </div>
               )}
-              options={users.map((u) => ({
+              options={availableUsers.map((u) => ({
                 value: u.id,
                 label: getUserLabel(u),
               }))}

@@ -11,11 +11,15 @@ export type AuthUser = {
   id: number;
   fio?: string;
   username?: string;
+  email?: string;
+  pnfl?: string;
   telefon?: string;
   telegram_id?: string;
   lavozim?: string;
   lavozim_display?: string;
-  boshqarma?: string;
+  boshqarma?: string | number;
+  boshqarma_nomi?: string;
+  avatar?: string;
   is_active?: boolean;
   date_joined?: string;
   last_login?: string | null;

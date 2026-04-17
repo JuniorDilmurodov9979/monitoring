@@ -50,6 +50,7 @@ interface Filters {
   holat: string;
   boshqarma: string;
   obyekt: string;
+  kategoriya: string;
   ordering: string;
 }
 
@@ -102,6 +103,7 @@ const defaultFilters: Filters = {
   holat: "",
   boshqarma: "",
   obyekt: "",
+  kategoriya: "",
   ordering: "-yuklangan_vaqt",
 };
 
@@ -121,8 +123,17 @@ const HujjatlarPage = () => {
     SelectOption[]
   >([]);
   const [kategoriyaLoading, setKategoriyaLoading] = useState(false);
+  const [kategoriyaFilterOptions, setKategoriyaFilterOptions] = useState<
+    SelectOption[]
+  >([]);
 
   const { user } = useAuth();
+
+  const flattenKategoriyalar = (nodes: any[]): SelectOption[] =>
+    nodes.flatMap((n) => [
+      { value: String(n.id), label: n.nomi },
+      ...(n.children ? flattenKategoriyalar(n.children) : []),
+    ]);
 
   // Add this handler:
   const handleBoshqarmaChange = async (val: string) => {
@@ -135,15 +146,9 @@ const HujjatlarPage = () => {
       const res = await api.get(
         `/hujjatlar/boshqarma_kategoriyalar/?boshqarma=${val}`,
       );
-      // API returns tree structure — flatten it
-      const flatten = (nodes: any[]): SelectOption[] =>
-        nodes.flatMap((n) => [
-          { value: String(n.id), label: n.nomi },
-          ...(n.children ? flatten(n.children) : []),
-        ]);
       const results = res.data?.results ?? res.data;
       setKategoriyalarOptions(
-        flatten(Array.isArray(results) ? results : [results]),
+        flattenKategoriyalar(Array.isArray(results) ? results : [results]),
       );
     } catch (e) {
       console.error(e);
@@ -192,6 +197,18 @@ const HujjatlarPage = () => {
       .catch(console.error);
   }, []);
 
+  // Fetch kategoriya options for list filter
+  useEffect(() => {
+    api
+      .get("/hujjatlar/kategoriyalar/boshqarma_kategoriyalari/")
+      .then((res) => {
+        const results = res.data?.results ?? res.data;
+        const normalized = Array.isArray(results) ? results : [results];
+        setKategoriyaFilterOptions(flattenKategoriyalar(normalized));
+      })
+      .catch(console.error);
+  }, []);
+
   const buildQueryString = (f: Filters, pageNumber: number) => {
     const params = new URLSearchParams();
     params.set("page", String(pageNumber));
@@ -199,6 +216,7 @@ const HujjatlarPage = () => {
     if (f.holat) params.set("holat", f.holat);
     if (f.boshqarma) params.set("boshqarma", f.boshqarma);
     if (f.obyekt) params.set("obyekt", f.obyekt);
+    if (f.kategoriya) params.set("kategoriya", String(Number(f.kategoriya)));
     if (f.ordering) params.set("ordering", f.ordering);
     return params.toString();
   };
@@ -390,6 +408,23 @@ const HujjatlarPage = () => {
                 .includes(input.toLowerCase())
             }
             className="min-w-[250px] grow py-1.5! rounded-xl!"
+            size="middle"
+          />
+
+          {/* Kategoriya */}
+          <Select
+            allowClear
+            showSearch
+            placeholder="Kategoriya"
+            value={filters.kategoriya || undefined}
+            onChange={(val) => setFilter("kategoriya", val ?? "")}
+            options={kategoriyaFilterOptions}
+            filterOption={(input, opt) =>
+              (opt?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
+            className="min-w-[230px] py-1.5! rounded-xl!"
             size="middle"
           />
 

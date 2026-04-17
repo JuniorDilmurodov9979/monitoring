@@ -15,6 +15,7 @@ import {
   LAVOZIM_RAHBARIYAT_OPTIONS,
   LAVOZIM_STAFF_OPTIONS,
 } from "@/shared/components/const/constValues";
+import Can from "@/shared/components/guards/Can";
 
 const { Option } = Select;
 
@@ -33,8 +34,7 @@ interface AddUserModalProps {
 const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
   const [form] = Form.useForm();
   const boshqarmaId = Form.useWatch("boshqarma", form);
-  const boshqarmaTanlangan =
-    boshqarmaId != null && boshqarmaId !== "";
+  const boshqarmaTanlangan = boshqarmaId != null && boshqarmaId !== "";
   const [loading, setLoading] = useState(false);
   const [boshqarmalar, setBoshqarmalar] = useState<Boshqarma[]>([]);
   const [boshqarmaLoading, setBoshqarmaLoading] = useState(false);
@@ -53,8 +53,10 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
   const fetchBoshqarmalar = async () => {
     try {
       setBoshqarmaLoading(true);
-      const res = await api.get(API_ENDPOINTS.BOSHQARMA.LIST);
-      setBoshqarmalar(res.data.results);
+      const res = await api.get("core/boshqarmalar/?all=true");
+      console.log(res.data);
+      
+      setBoshqarmalar(res.data);
     } catch (err) {
       console.error(err);
       message.error("Boshqarmalar yuklanmadi");
@@ -167,7 +169,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
                   Boshqarma
                 </span>
               }
-              // rules={[{ required: true, message: "Boshqarmani tanlang" }]}
+            // rules={[{ required: true, message: "Boshqarmani tanlang" }]}
             >
               <Select
                 placeholder="Boshqarmani tanlang"
@@ -233,30 +235,32 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item
-              name="rahbariyat_lavozim"
-              label={
-                <span className="text-sm font-medium text-gray-700">
-                  Rahbariyat
-                </span>
-              }
-            >
-              <Select
-                placeholder="Rahbariyat lavozimi"
-                size="large"
-                allowClear
-                disabled={boshqarmaTanlangan}
-                onChange={() => form.setFieldValue("lavozim", undefined)}
+          <Can action="canSeeRahbariyatLavozim">
+            <Col span={12}>
+              <Form.Item
+                name="rahbariyat_lavozim"
+                label={
+                  <span className="text-sm font-medium text-gray-700">
+                    Rahbariyat
+                  </span>
+                }
               >
-                {LAVOZIM_RAHBARIYAT_OPTIONS.map((l) => (
-                  <Option key={l.value} value={l.value}>
-                    {l.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+                <Select
+                  placeholder="Rahbariyat lavozimi"
+                  size="large"
+                  allowClear
+                  disabled={boshqarmaTanlangan}
+                  onChange={() => form.setFieldValue("lavozim", undefined)}
+                >
+                  {LAVOZIM_RAHBARIYAT_OPTIONS.map((l) => (
+                    <Option key={l.value} value={l.value}>
+                      {l.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Can>
         </Row>
         <Row gutter={12}>
           <Col span={12}>
@@ -288,7 +292,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
               Telegram ID
             </span>
           }
-          // rules={[{ required: true, message: "Telegram ID kiriting" }]}
+        // rules={[{ required: true, message: "Telegram ID kiriting" }]}
         >
           <Input
             prefix={<SendOutlined className="text-gray-400" />}

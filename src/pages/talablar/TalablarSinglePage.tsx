@@ -537,7 +537,7 @@ const TalablarSinglePage = () => {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={submitting}
-                      className="flex items-center gap-1.5 text-slate-400 hover:text-blue-500 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-1.5 text-slate-400 hover:text-blue-500 transition-colors text-xs font-medium disabled:opacity-50 cursor-pointer  disabled:cursor-not-allowed"
                     >
                       <PaperClipOutlined />
                       <span>Fayl biriktirish</span>

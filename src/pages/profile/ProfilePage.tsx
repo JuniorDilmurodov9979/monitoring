@@ -4,7 +4,29 @@ import type { AxiosError } from "axios";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
-import { data, Link } from "react-router-dom";
+type ProfileUpdatePayload = {
+  username: string;
+  email: string;
+  pnfl: string;
+  fio: string;
+  boshqarma: number;
+  lavozim: string;
+  telegram_id: string;
+  telefon: string;
+  avatar: string;
+};
+
+type ProfileFormState = {
+  username: string;
+  email: string;
+  pnfl: string;
+  fio: string;
+  boshqarma: string;
+  lavozim: string;
+  telegram_id: string;
+  telefon: string;
+  avatar: string;
+};
 
 type ErrorResponse = {
   message?: string;
@@ -26,10 +48,16 @@ const ProfilePage = () => {
   } | null>(null);
 
   // Profile form state
-  const [profileForm, setProfileForm] = useState({
+  const [profileForm, setProfileForm] = useState<ProfileFormState>({
+    username: "",
+    email: "",
+    pnfl: "",
     fio: "",
+    boshqarma: "",
+    lavozim: "",
     telefon: "",
     telegram_id: "",
+    avatar: "",
   });
 
   // Password form state
@@ -141,9 +169,15 @@ const ProfilePage = () => {
 
   const handleEditProfile = () => {
     setProfileForm({
+      username: user.username || "",
+      email: user.email || "",
+      pnfl: user.pnfl || "",
       fio: user.fio || "",
+      boshqarma: user.boshqarma != null ? String(user.boshqarma) : "",
+      lavozim: user.lavozim || "",
       telefon: user.telefon || "",
       telegram_id: user.telegram_id || "",
+      avatar: user.avatar || "",
     });
     setIsEditingProfile(true);
     setMessage(null);
@@ -155,7 +189,20 @@ const ProfilePage = () => {
     setMessage(null);
 
     try {
-      await api.put(API_ENDPOINTS.USERS.PROFILE, profileForm);
+      const parsedBoshqarma = Number(profileForm.boshqarma);
+      const payload: ProfileUpdatePayload = {
+        username: profileForm.username,
+        email: profileForm.email,
+        pnfl: profileForm.pnfl,
+        fio: profileForm.fio,
+        boshqarma: Number.isNaN(parsedBoshqarma) ? 0 : parsedBoshqarma,
+        lavozim: profileForm.lavozim,
+        telegram_id: profileForm.telegram_id,
+        telefon: profileForm.telefon,
+        avatar: profileForm.avatar,
+      };
+
+      await api.put(API_ENDPOINTS.USERS.PROFILE, payload);
       await fetchUser();
 
       setMessage({
@@ -433,6 +480,60 @@ const ProfilePage = () => {
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.username}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          username: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={profileForm.email}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          email: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      PNFL
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.pnfl}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          pnfl: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       F.I.O
                     </label>
                     <input
@@ -440,6 +541,43 @@ const ProfilePage = () => {
                       value={profileForm.fio}
                       onChange={(e) =>
                         setProfileForm({ ...profileForm, fio: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Boshqarma ID
+                    </label>
+                    <input
+                      type="number"
+                      value={profileForm.boshqarma}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          boshqarma: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      min={0}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lavozim
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.lavozim}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          lavozim: e.target.value,
+                        })
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                       required
@@ -480,6 +618,23 @@ const ProfilePage = () => {
                       }
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                       placeholder="123456789"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Avatar URL
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.avatar}
+                      onChange={(e) =>
+                        setProfileForm({
+                          ...profileForm,
+                          avatar: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     />
                   </div>
 
