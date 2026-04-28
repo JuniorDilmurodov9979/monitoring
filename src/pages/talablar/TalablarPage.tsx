@@ -755,7 +755,7 @@ const Talablar = () => {
               <PlusOutlined className="text-white! text-xs" />
             </div>
             <span className="font-semibold text-gray-800">
-              Yangi talab yaratish
+              Yangi so'rov yaratish
             </span>
           </div>
         }
@@ -909,10 +909,10 @@ const Talablar = () => {
         <div className="flex items-center justify-between mb-1">
           <div>
             <Title level={3} className="mb-0! text-gray-800!">
-              Talablar
+              So'rovlar
             </Title>
             <Text className="text-gray-400 text-sm">
-              Barcha talablar ro'yxati
+              Barcha so'rovlar ro'yxati
             </Text>
           </div>
           <Space>
@@ -935,7 +935,7 @@ const Talablar = () => {
                 onClick={() => setModalOpen(true)}
                 className="bg-blue-500 hover:bg-blue-600 border-0 shadow-sm rounded-lg!"
               >
-                Yangi talab
+                Yangi so'rov yaratish
               </Button>
             </Can>
           </Space>

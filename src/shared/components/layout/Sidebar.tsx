@@ -55,7 +55,7 @@ const navItems: {
   //   permission: "canManageUsers",
   // },
   { label: "Chat xonalar", path: "/chats", icon: MessageSquare },
-  { label: "Talablar", path: "/talablar", icon: Pin },
+  { label: "So'rovlar", path: "/talablar", icon: Pin },
   {
     label: "Xodimlar",
     path: "/users",

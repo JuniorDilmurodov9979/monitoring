@@ -4,17 +4,6 @@ import type { AxiosError } from "axios";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api/axios";
 import { API_ENDPOINTS } from "@/services/api/endpoints";
-type ProfileUpdatePayload = {
-  username: string;
-  email: string;
-  pnfl: string;
-  fio: string;
-  boshqarma: number;
-  lavozim: string;
-  telegram_id: string;
-  telefon: string;
-  avatar: string;
-};
 
 type ProfileFormState = {
   username: string;
@@ -42,6 +31,7 @@ const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -173,12 +163,13 @@ const ProfilePage = () => {
       email: user.email || "",
       pnfl: user.pnfl || "",
       fio: user.fio || "",
-      boshqarma: user.boshqarma != null ? String(user.boshqarma) : "",
-      lavozim: user.lavozim || "",
+      boshqarma: user.boshqarma_nomi != null ? String(user.boshqarma_nomi) : "",
+      lavozim: user.lavozim_display || "",
       telefon: user.telefon || "",
       telegram_id: user.telegram_id || "",
       avatar: user.avatar || "",
     });
+    setAvatarFile(null);
     setIsEditingProfile(true);
     setMessage(null);
   };
@@ -190,19 +181,23 @@ const ProfilePage = () => {
 
     try {
       const parsedBoshqarma = Number(profileForm.boshqarma);
-      const payload: ProfileUpdatePayload = {
-        username: profileForm.username,
-        email: profileForm.email,
-        pnfl: profileForm.pnfl,
-        fio: profileForm.fio,
-        boshqarma: Number.isNaN(parsedBoshqarma) ? 0 : parsedBoshqarma,
-        lavozim: profileForm.lavozim,
-        telegram_id: profileForm.telegram_id,
-        telefon: profileForm.telefon,
-        avatar: profileForm.avatar,
-      };
+      const formData = new FormData();
+      formData.append("username", profileForm.username);
+      formData.append("email", profileForm.email);
+      formData.append("pnfl", profileForm.pnfl);
+      formData.append("fio", profileForm.fio);
+      formData.append(
+        "boshqarma",
+        String(Number.isNaN(parsedBoshqarma) ? 0 : parsedBoshqarma)
+      );
+      formData.append("lavozim", profileForm.lavozim);
+      formData.append("telegram_id", profileForm.telegram_id);
+      formData.append("telefon", profileForm.telefon);
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
 
-      await api.put(API_ENDPOINTS.USERS.PROFILE, payload);
+      await api.put(API_ENDPOINTS.USERS.PROFILE, formData);
       await fetchUser();
 
       setMessage({
@@ -210,6 +205,7 @@ const ProfilePage = () => {
         text: "Profil muvaffaqiyatli yangilandi!",
       });
 
+      setAvatarFile(null);
       setIsEditingProfile(false);
     } catch (error: unknown) {
       setMessage({
@@ -260,6 +256,14 @@ const ProfilePage = () => {
       setLoading(false);
     }
   };
+
+  // console.log(user);
+
+  console.log(profileForm);
+  console.log(user);
+  
+  
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br  py-8 px-4">
@@ -549,10 +553,11 @@ const ProfilePage = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Boshqarma ID
+                      Boshqarma
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      disabled
                       value={profileForm.boshqarma}
                       onChange={(e) =>
                         setProfileForm({
@@ -560,7 +565,7 @@ const ProfilePage = () => {
                           boshqarma: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-not-allowed"
                       min={0}
                       required
                     />
@@ -572,6 +577,7 @@ const ProfilePage = () => {
                     </label>
                     <input
                       type="text"
+                      disabled
                       value={profileForm.lavozim}
                       onChange={(e) =>
                         setProfileForm({
@@ -579,7 +585,7 @@ const ProfilePage = () => {
                           lavozim: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-not-allowed"
                       required
                     />
                   </div>
@@ -623,19 +629,29 @@ const ProfilePage = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Avatar URL
+                      Avatar
+                    </label>
+                    <label
+                      htmlFor="profile-avatar-upload"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-600 hover:border-indigo-400 cursor-pointer transition-all block"
+                    >
+                      {avatarFile ? avatarFile.name : "Rasmingizni kiriting"}
                     </label>
                     <input
-                      type="text"
-                      value={profileForm.avatar}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          avatar: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      id="profile-avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setAvatarFile(file);
+                      }}
+                      className="hidden"
                     />
+                    <p className="text-xs text-gray-500 mt-2">
+                      {avatarFile
+                        ? `Tanlangan fayl: ${avatarFile.name}`
+                        : "Yangi rasm tanlanmasa, joriy avatar saqlanib qoladi."}
+                    </p>
                   </div>
 
                   <div className="flex gap-3 pt-4">

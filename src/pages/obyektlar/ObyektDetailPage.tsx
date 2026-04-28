@@ -498,8 +498,8 @@ const ObyektDetailPage = () => {
                     "Kategoriya",
                     "Boshqarma",
                     "Yuklovchi",
-                    "Muddat",
-                    "Holat",
+                    // "Muddat",
+                    // "Holat",
                   ].map((h) => (
                     <th
                       key={h}
@@ -549,7 +549,7 @@ const ObyektDetailPage = () => {
                       </td>
 
                       {/* Muddat */}
-                      <td className="py-3 pr-4 whitespace-nowrap">
+                      {/* <td className="py-3 pr-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           {h.is_kechikkan ? (
                             <WarningOutlined className="text-rose-400 text-xs" />
@@ -566,10 +566,10 @@ const ObyektDetailPage = () => {
                             {formatDate(h.muddat)}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
 
                       {/* Holat */}
-                      <td className="py-3">
+                      {/* <td className="py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${holatCfg.badge}`}
                         >
@@ -578,7 +578,7 @@ const ObyektDetailPage = () => {
                           />
                           {h.holat_display}
                         </span>
-                      </td>
+                      </td> */}
                     </tr>
                   );
                 })}

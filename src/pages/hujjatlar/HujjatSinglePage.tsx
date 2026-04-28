@@ -180,7 +180,7 @@ const HujjatSinglePage = () => {
       obyekt: data.obyekt,
       kategoriya: data.kategoriya,
       boshqarma: data.boshqarma,
-      holat: data.holat,
+      // holat: data.holat,
       muddat: dayjs(data.muddat),
       rad_sababi: data.rad_sababi || "",
       izoh: data.izoh || "",
@@ -284,7 +284,7 @@ const HujjatSinglePage = () => {
           </div>
 
           <div className="flex items-center gap-2 mt-1">
-            <HolatBadge holat={data.holat} label={data.holat_display} />
+            {/* <HolatBadge holat={data.holat} label={data.holat_display} /> */}
 
             <Can action="canEditHujjat">
               <button
@@ -516,7 +516,7 @@ const HujjatSinglePage = () => {
             />
           </Form.Item>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="holat"
               label={
@@ -548,7 +548,7 @@ const HujjatSinglePage = () => {
             >
               <DatePicker className="w-full rounded-lg" format="YYYY-MM-DD" />
             </Form.Item>
-          </div>
+          </div> */}
 
           <Form.Item
             noStyle

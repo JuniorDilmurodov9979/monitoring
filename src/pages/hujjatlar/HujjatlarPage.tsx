@@ -129,7 +129,6 @@ const HujjatlarPage = () => {
 
   const { user } = useAuth();
   console.log(user);
-  
 
   const flattenKategoriyalar = (nodes: any[]): SelectOption[] =>
     nodes.flatMap((n) => [
@@ -186,7 +185,6 @@ const HujjatlarPage = () => {
       .catch(console.error);
   }, []);
   console.log(boshqarmalarOptions);
-  
 
   // Fetch obyektlar options
   useEffect(() => {
@@ -294,11 +292,11 @@ const HujjatlarPage = () => {
         </span>
       ),
     },
-    {
-      title: "Holat",
-      dataIndex: "holat_display",
-      render: (val, record) => <HolatBadge holat={record.holat} label={val} />,
-    },
+    // {
+    //   title: "Holat",
+    //   dataIndex: "holat_display",
+    //   render: (val, record) => <HolatBadge holat={record.holat} label={val} />,
+    // },
   ];
 
   const handleCreateHujjat = async () => {
@@ -371,7 +369,7 @@ const HujjatlarPage = () => {
           </div>
 
           {/* Holat */}
-          <Select
+          {/* <Select
             allowClear
             placeholder="Holat"
             value={filters.holat || undefined}
@@ -379,7 +377,7 @@ const HujjatlarPage = () => {
             options={HOLAT_OPTIONS}
             className="min-w-[140px] py-1.5! rounded-xl!"
             size="middle"
-          />
+          /> */}
 
           {/* Boshqarma */}
           <Select
@@ -514,7 +512,7 @@ const HujjatlarPage = () => {
         }}
         cancelText="Bekor qilish"
         className="hujjat-modal"
-        width={520}
+        width={850}
       >
         <Form layout="vertical" form={form} className="pt-2">
           <Form.Item
@@ -600,7 +598,7 @@ const HujjatlarPage = () => {
             />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="muddat"
             label={<FieldLabel>Muddat</FieldLabel>}
             rules={[{ required: true }]}
@@ -609,7 +607,7 @@ const HujjatlarPage = () => {
               className="w-full rounded-lg"
               placeholder="Sanani tanlang"
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item name="izoh" label={<FieldLabel>Izoh</FieldLabel>}>
             <Input.TextArea

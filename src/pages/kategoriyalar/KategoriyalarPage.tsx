@@ -23,6 +23,7 @@ import {
   ReloadOutlined,
   RightOutlined,
   EditOutlined,
+  DeleteOutlined,
   PaperClipOutlined,
   ClockCircleOutlined,
   WarningOutlined,
@@ -367,7 +368,7 @@ function AddModal({
             </span>
           }
           name="obyekt"
-          rules={[{ required: true, message: "Obyekt tanlang" }]}
+          // rules={[{ required: true, message: "Obyekt tanlang" }]}
         >
           <Select
             placeholder="— tanlang —"
@@ -584,7 +585,7 @@ function EditModal({
                 </span>
               }
               name="obyekt"
-              rules={[{ required: true, message: "Obyekt tanlang" }]}
+              // rules={[{ required: true, message: "Obyekt tanlang" }]}
             >
               <Select
                 placeholder="— tanlang —"
@@ -658,6 +659,7 @@ const KategoriyalarPage = () => {
   const [hujjatlarLoading, setHujjatlarLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
@@ -789,6 +791,35 @@ const KategoriyalarPage = () => {
       ]
     : [];
 
+  const handleDeleteKategoriya = (kategoriya: Kategoriya) => {
+    AntModal.confirm({
+      title: "Kategoriyani o'chirish",
+      content: `"${kategoriya.nomi}" kategoriyasi o'chirilsinmi?`,
+      okText: "O'chirish",
+      okType: "danger",
+      cancelText: "Bekor qilish",
+      onOk: async () => {
+        setDeletingId(kategoriya.id);
+        try {
+          await api.delete(`hujjatlar/kategoriyalar/${kategoriya.id}/`);
+          await fetchKategoriyalar();
+          if (selected?.id === kategoriya.id) {
+            setSelected(null);
+            setSelectedDetail(null);
+            setKategoriyaHujjatlar([]);
+          }
+        } catch {
+          AntModal.error({
+            title: "O'chirishda xato",
+            content: "Kategoriyani o'chirishning imkoni bo'lmadi.",
+          });
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
       {/* ── Top bar ── */}
@@ -901,6 +932,16 @@ const KategoriyalarPage = () => {
                       className="border-slate-200 text-slate-500 hover:!text-indigo-500 hover:!border-indigo-300 rounded-xl!"
                     >
                       Tahrirlash
+                    </Button>
+                    <Button
+                      danger
+                      icon={<DeleteOutlined />}
+                      size="middle"
+                      loading={deletingId === selectedDetail.id}
+                      onClick={() => handleDeleteKategoriya(selectedDetail)}
+                      className="rounded-xl!"
+                    >
+                      O'chirish
                     </Button>
                   </div>
                 </div>

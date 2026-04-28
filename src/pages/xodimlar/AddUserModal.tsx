@@ -16,6 +16,7 @@ import {
   LAVOZIM_STAFF_OPTIONS,
 } from "@/shared/components/const/constValues";
 import Can from "@/shared/components/guards/Can";
+import { log } from "console";
 
 const { Option } = Select;
 
@@ -55,7 +56,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
       setBoshqarmaLoading(true);
       const res = await api.get("core/boshqarmalar/?all=true");
       console.log(res.data);
-      
+
       setBoshqarmalar(res.data);
     } catch (err) {
       console.error(err);
@@ -92,6 +93,7 @@ const AddUserModal = ({ open, onClose, onSuccess }: AddUserModalProps) => {
           errors: Array.isArray(msgs) ? msgs : [msgs as string],
         }));
         form.setFields(fieldErrors);
+        message.error(errors.detail);
       } else if (!err?.errorFields) {
         // Not a form validation error
         message.error("Xatolik yuz berdi. Qayta urinib ko'ring.");
