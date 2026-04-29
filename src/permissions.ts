@@ -29,6 +29,7 @@ export const PERMISSIONS = {
     canSeeKategoriyaMenu: true,
     canEditObyekt: true,
     canSeeRahbariyatLavozim: true,
+    canTalabEditDelete: true,
   },
   rais: {
     canCreate: true,
@@ -48,6 +49,7 @@ export const PERMISSIONS = {
     canSeeKategoriyaMenu: true,
     canEditObyekt: true,
     canSeeRahbariyatLavozim: true,
+    canTalabEditDelete: true,
   },
   rais_orinbosari: {
     canCreate: false,
@@ -63,6 +65,8 @@ export const PERMISSIONS = {
     canSeeAllBoshqarmalar: true,
     canEditObyekt: true,
     canSeeRahbariyatLavozim: false,
+    canTalabEditDelete: false,
+
   },
   boshqarma_boshi: {
     canCreate: true,
@@ -82,6 +86,7 @@ export const PERMISSIONS = {
     canSeeKategoriyaMenu: true,
     canEditObyekt: false,
     canSeeRahbariyatLavozim: false,
+    canTalabEditDelete: false,
   },
   pto: {
     canCreate: false,
@@ -97,6 +102,7 @@ export const PERMISSIONS = {
     canDeleteTopshiriq: false,
     canSeeKategoriyaMenu: false,
     canSeeRahbariyatLavozim: false,
+    canTalabEditDelete: false,
   },
   boshqarma: {
     canCreate: true,

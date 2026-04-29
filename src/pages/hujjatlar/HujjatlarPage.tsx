@@ -309,8 +309,12 @@ const HujjatlarPage = () => {
       formData.append("muddat", dayjs(values.muddat).format("YYYY-MM-DD"));
       formData.append("izoh", values.izoh || "");
       formData.append("boshqarma", values.boshqarma);
-      if (values.fayl?.fileList?.length > 0) {
-        formData.append("fayl", values.fayl.fileList[0].originFileObj);
+      if (values.fayl?.length > 0) {
+        values.fayl.forEach((file: { originFileObj?: File }) => {
+          if (file.originFileObj) {
+            formData.append("fayl", file.originFileObj);
+          }
+        });
       }
       await api.post(API_ENDPOINTS.HUJJATLAR.LIST, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -620,15 +624,17 @@ const HujjatlarPage = () => {
           <Form.Item
             name="fayl"
             label={<FieldLabel>Fayl yuklash</FieldLabel>}
-            valuePropName="file"
+            valuePropName="fileList"
+            getValueFromEvent={(event) => event?.fileList || []}
             rules={[{ required: true, message: "Fayl majburiy" }]}
           >
-            <Upload beforeUpload={() => false} maxCount={1}>
+            <Upload beforeUpload={() => false} multiple>
               <Button icon={<UploadOutlined />} className="rounded-lg">
-                Fayl tanlash
+                Fayllarni tanlash
               </Button>
             </Upload>
           </Form.Item>
+          
         </Form>
       </Modal>
 

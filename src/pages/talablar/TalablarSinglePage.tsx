@@ -12,6 +12,10 @@ import {
   Input,
   Upload,
   message,
+  Modal,
+  Form,
+  DatePicker,
+  Popconfirm,
 } from "antd";
 import {
   UserOutlined,
@@ -30,11 +34,14 @@ import {
   PlusOutlined,
   LoadingOutlined,
   DeleteOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDate } from "@/shared/components/const/CustomUI";
 import api from "@/services/api/axios";
 import type { UploadFile } from "antd/es/upload/interface";
+import dayjs from "dayjs";
+import Can from "@/shared/components/guards/Can";
 
 const { Text, Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -73,6 +80,13 @@ interface TalabDetail {
   izohlar: Izoh[];
   created_at: string;
   updated_at: string;
+}
+
+interface TalabEditFormValues {
+  mavzu: string;
+  mazmun: string;
+  muddat: any;
+  status: string;
 }
 
 const statusConfig: Record<
@@ -177,6 +191,10 @@ const InfoRow = ({
 const TalablarSinglePage = () => {
   const [data, setData] = useState<TalabDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [editForm] = Form.useForm<TalabEditFormValues>();
 
   // Izoh form state
   const [izohMatn, setIzohMatn] = useState("");
@@ -253,6 +271,56 @@ const TalablarSinglePage = () => {
     }
   };
 
+  const openEditModal = () => {
+    if (!data) return;
+    editForm.setFieldsValue({
+      mavzu: data.mavzu,
+      mazmun: data.mazmun,
+      muddat: data.muddat ? dayjs(data.muddat) : undefined,
+      status: data.status,
+    });
+    setEditOpen(true);
+  };
+
+  const handleEditSubmit = async (values: TalabEditFormValues) => {
+    if (!data || !id) return;
+    try {
+      setEditSubmitting(true);
+      await api.patch(`talablar/${id}/`, {
+        ijrochi_boshqarma: data.ijrochi_boshqarma,
+        ijrochi: data.ijrochi,
+        kategoriya: data.kategoriya,
+        mavzu: values.mavzu?.trim(),
+        mazmun: values.mazmun?.trim(),
+        status: values.status || data.status,
+        muddat: values.muddat?.format("YYYY-MM-DD") || data.muddat,
+      });
+      message.success("Talab muvaffaqiyatli tahrirlandi");
+      setEditOpen(false);
+      await fetchTalab();
+    } catch (error) {
+      console.error("Failed to update talab:", error);
+      message.error("Talabni tahrirlashda xatolik yuz berdi");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      setDeleteSubmitting(true);
+      await api.delete(`talablar/${id}/`);
+      message.success("Talab o'chirildi");
+      navigate("/talablar");
+    } catch (error) {
+      console.error("Failed to delete talab:", error);
+      message.error("Talabni o'chirishda xatolik yuz berdi");
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
@@ -267,6 +335,59 @@ const TalablarSinglePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/40 p-6 rounded-xl">
+      <Modal
+        title="Talabni tahrirlash"
+        open={editOpen}
+        onCancel={() => setEditOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleEditSubmit}
+          requiredMark={false}
+          className="pt-2"
+        >
+          <Form.Item
+            label="Mavzu"
+            name="mavzu"
+            rules={[{ required: true, message: "Mavzuni kiriting" }]}
+          >
+            <Input placeholder="Mavzu..." />
+          </Form.Item>
+          <Form.Item
+            label="Mazmun"
+            name="mazmun"
+            rules={[{ required: true, message: "Mazmunni kiriting" }]}
+          >
+            <TextArea rows={4} placeholder="Mazmun..." />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item
+              label="Muddat"
+              name="muddat"
+              rules={[{ required: true, message: "Muddatni tanlang" }]}
+            >
+              <DatePicker className="w-full" format="YYYY-MM-DD" />
+            </Form.Item>
+            <Form.Item
+              label="Status"
+              name="status"
+              rules={[{ required: true, message: "Statusni tanlang" }]}
+            >
+              <Input placeholder="Status" />
+            </Form.Item>
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button onClick={() => setEditOpen(false)}>Bekor qilish</Button>
+            <Button type="primary" htmlType="submit" loading={editSubmitting}>
+              Saqlash
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
       {/* Top bar */}
       <div className="flex items-center gap-3 mb-6">
         <Button
@@ -322,18 +443,44 @@ const TalablarSinglePage = () => {
             <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-100 flex items-center justify-center flex-shrink-0">
               <FileTextOutlined className="text-blue-500 text-lg" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                {/* <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
-                  {data.kategoriya_nomi ? data.kategoriya_nomi : "Belgilanmagan"}
-                </span> */}
-              </div>
-              <Title level={4} className="mb-1! text-slate-800! font-bold!">
-                {data.mavzu}
-              </Title>
-              <Text className="text-slate-400 text-xs">
-                Yaratildi: {fmtTime(data.created_at)}
-              </Text>
+            <div className="flex-1 flex items-center justify-between min-w-0">
+              <Can action="canTalabEditDelete">
+                <div>
+                  <Title level={4} className="mb-1! text-slate-800! font-bold!">
+                    {data.mavzu}
+                  </Title>
+                  <Text className="text-slate-400 text-xs">
+                    Yaratildi: {fmtTime(data.created_at)}
+                  </Text>
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Button
+                    icon={<EditOutlined />}
+                    size="middle"
+                    className="rounded-lg! border-blue-200! text-blue-600!"
+                    onClick={openEditModal}
+                  >
+                    Tahrirlash
+                  </Button>
+                  <Popconfirm
+                    title="Talabni o'chirmoqchimisiz?"
+                    okText="Ha"
+                    cancelText="Yo'q"
+                    okButtonProps={{ danger: true, loading: deleteSubmitting }}
+                    onConfirm={handleDelete}
+                  >
+                    <Button
+                      icon={<DeleteOutlined />}
+                      size="middle"
+                      danger
+                      loading={deleteSubmitting}
+                      className="rounded-lg!"
+                    >
+                      O'chirish
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </Can>
             </div>
           </div>
 
