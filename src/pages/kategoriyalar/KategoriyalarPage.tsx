@@ -2,7 +2,7 @@
 
 import api from "@/services/api/axios";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import {
   Button,
   Input,
@@ -663,6 +663,7 @@ const KategoriyalarPage = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [totalCategories, setTotalCategories] = useState<Kategoriya[]>([]);
 
   const fetchKategoriyalar = async () => {
     try {
@@ -689,6 +690,15 @@ const KategoriyalarPage = () => {
     try {
       const { data } = await api.get("obyektlar/");
       setObyektlar(Array.isArray(data) ? data : (data.results ?? []));
+    } catch {
+      /* silent */
+    }
+  };
+
+  const fetchTotalCategories = async () => {
+    try {
+      const { data } = await api.get("hujjatlar/kategoriyalar/");
+      setTotalCategories(Array.isArray(data) ? data : (data?.results ?? []));
     } catch {
       /* silent */
     }
@@ -744,6 +754,10 @@ const KategoriyalarPage = () => {
     };
   }, [selected?.id]);
 
+  useEffect(() => {
+    fetchTotalCategories();
+  }, []);
+
   const filtered = search.trim()
     ? kategoriyalar.filter(
         (k) =>
@@ -760,7 +774,11 @@ const KategoriyalarPage = () => {
       flattenAll(k.children || []);
     });
   flattenAll(kategoriyalar);
-  const totalDocs = flatAll.reduce((s, k) => s + (k.hujjatlar_soni || 0), 0);
+
+  const totalDocs = totalCategories.reduce(
+    (sum, k) => sum + (k.hujjatlar_soni || 0),
+    0,
+  );
 
   const statCards = selectedDetail
     ? [
@@ -781,9 +799,9 @@ const KategoriyalarPage = () => {
           bg: "#f0f9ff",
         },
         {
-          label: "Hujjatlar",
+          label: "Jami hujjatlar",
           value: selectedDetail.hujjatlar_soni
-            ? selectedDetail.hujjatlar_soni
+            ? `${selectedDetail.hujjatlar_soni} ta`
             : "yo'q",
           color: "#059669",
           bg: "#f0fdf4",
